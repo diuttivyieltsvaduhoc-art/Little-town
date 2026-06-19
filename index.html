@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Little Town 🏘️ - Hệ Thống Tích Điểm Học Sinh</title>
+  <meta name="description" content="Little Town - Trang web tích điểm học sinh thú vị với thú cưng, nhà cửa và con phố sôi động!">
+  <link rel="stylesheet" href="css/main.css?v=2">
+  <link rel="stylesheet" href="css/login.css?v=2">
+  <link rel="stylesheet" href="css/shop.css?v=2">
+</head>
+<body>
+  <div class="login-bg" id="loginBg">
+    <!-- Stars -->
+    <div class="stars-layer" id="starsLayer"></div>
+
+    <!-- Animated clouds -->
+    <div class="cloud" style="width:120px;height:40px;top:15%;--speed:18s;--delay:0s;"><div style="width:60px;height:60px;background:rgba(255,255,255,0.05);border-radius:50%;position:absolute;top:-20px;left:20px;"></div></div>
+    <div class="cloud" style="width:80px;height:28px;top:30%;--speed:25s;--delay:-8s;"><div style="width:40px;height:40px;background:rgba(255,255,255,0.04);border-radius:50%;position:absolute;top:-12px;left:15px;"></div></div>
+    <div class="cloud" style="width:150px;height:50px;top:8%;--speed:22s;--delay:-5s;"><div style="width:80px;height:80px;background:rgba(255,255,255,0.04);border-radius:50%;position:absolute;top:-30px;left:30px;"></div></div>
+
+    <!-- Bottom town silhouette -->
+    <div class="login-town-scene">
+      <svg viewBox="0 0 1440 200" preserveAspectRatio="none" width="100%" height="100%">
+        <!-- Buildings silhouette -->
+        <rect x="0" y="80" width="60" height="120" fill="rgba(108,99,255,0.15)"/>
+        <rect x="65" y="50" width="80" height="150" fill="rgba(108,99,255,0.12)"/>
+        <rect x="150" y="90" width="50" height="110" fill="rgba(255,101,132,0.12)"/>
+        <rect x="205" y="60" width="70" height="140" fill="rgba(108,99,255,0.1)"/>
+        <rect x="280" y="100" width="55" height="100" fill="rgba(67,233,123,0.1)"/>
+        <rect x="340" y="40" width="90" height="160" fill="rgba(108,99,255,0.12)"/>
+        <rect x="435" y="85" width="65" height="115" fill="rgba(255,101,132,0.1)"/>
+        <rect x="505" y="70" width="75" height="130" fill="rgba(108,99,255,0.1)"/>
+        <rect x="585" y="55" width="85" height="145" fill="rgba(67,233,123,0.08)"/>
+        <rect x="675" y="95" width="60" height="105" fill="rgba(108,99,255,0.12)"/>
+        <rect x="740" y="35" width="100" height="165" fill="rgba(255,101,132,0.1)"/>
+        <rect x="845" y="75" width="70" height="125" fill="rgba(108,99,255,0.12)"/>
+        <rect x="920" y="60" width="80" height="140" fill="rgba(67,233,123,0.08)"/>
+        <rect x="1005" y="90" width="55" height="110" fill="rgba(108,99,255,0.1)"/>
+        <rect x="1065" y="45" width="95" height="155" fill="rgba(255,101,132,0.12)"/>
+        <rect x="1165" y="80" width="65" height="120" fill="rgba(108,99,255,0.1)"/>
+        <rect x="1235" y="55" width="85" height="145" fill="rgba(67,233,123,0.1)"/>
+        <rect x="1325" y="70" width="115" height="130" fill="rgba(108,99,255,0.12)"/>
+        <!-- Roof triangles -->
+        <polygon points="65,50 105,20 145,50" fill="rgba(108,99,255,0.15)"/>
+        <polygon points="340,40 385,5 430,40" fill="rgba(108,99,255,0.12)"/>
+        <polygon points="740,35 790,0 840,35" fill="rgba(255,101,132,0.12)"/>
+        <polygon points="1065,45 1112,10 1160,45" fill="rgba(255,101,132,0.12)"/>
+        <!-- Ground -->
+        <rect x="0" y="190" width="1440" height="10" fill="rgba(67,233,123,0.15)"/>
+        <!-- Windows lit up -->
+        <rect x="75" y="65" width="12" height="10" rx="2" fill="rgba(255,255,200,0.4)"/>
+        <rect x="100" y="65" width="12" height="10" rx="2" fill="rgba(255,255,200,0.4)"/>
+        <rect x="355" y="60" width="15" height="12" rx="2" fill="rgba(255,255,200,0.3)"/>
+        <rect x="385" y="60" width="15" height="12" rx="2" fill="rgba(255,255,200,0.3)"/>
+        <rect x="750" y="50" width="18" height="14" rx="2" fill="rgba(255,255,200,0.3)"/>
+        <rect x="780" y="50" width="18" height="14" rx="2" fill="rgba(255,255,200,0.3)"/>
+      </svg>
+    </div>
+
+    <!-- Main Login Card -->
+    <div class="login-container">
+      <div class="login-logo">
+        <span class="login-logo-icon">🏘️</span>
+        <div class="login-logo-title">Little Town</div>
+        <div class="login-logo-sub">✨ Hệ Thống Tích Điểm Học Sinh • Student Points System ✨</div>
+      </div>
+
+      <div class="glass login-card">
+        <!-- Tabs -->
+        <div class="login-tabs">
+          <button class="login-tab active" id="tabTeacher" onclick="switchLoginTab('teacher')">
+            👩‍🏫 Giáo Viên
+          </button>
+          <button class="login-tab" id="tabStudent" onclick="switchLoginTab('student')">
+            🧒 Học Sinh
+          </button>
+        </div>
+
+        <!-- Teacher Login / Register -->
+        <div id="teacherPanel">
+          <!-- Sub-tabs: Đăng nhập | Đăng ký -->
+          <div class="teacher-subtabs">
+            <button class="teacher-subtab active" id="subTabLogin" onclick="switchTeacherSubTab('login')">
+              🔑 Đăng Nhập
+            </button>
+            <button class="teacher-subtab" id="subTabRegister" onclick="switchTeacherSubTab('register')">
+              ✏️ Đăng Ký
+            </button>
+          </div>
+
+          <!-- LOGIN FORM -->
+          <div id="teacherLoginForm" class="teacher-form">
+            <div class="input-group">
+              <label>📧 Email Giáo Viên</label>
+              <input class="input" type="email" id="teacherEmail" placeholder="giaovien@truong.edu.vn" value="giaovien@demo.com">
+            </div>
+            <div class="input-group">
+              <label>🔒 Mật Khẩu</label>
+              <div class="input-password-wrap">
+                <input class="input" type="password" id="teacherPass" placeholder="••••••••" value="demo123">
+                <button type="button" class="pass-toggle-btn" onclick="togglePass('teacherPass',this)" title="Hiện/ẩn mật khẩu">👁️</button>
+              </div>
+            </div>
+            <button class="btn btn-primary btn-block btn-lg" onclick="loginTeacher()" id="loginTeacherBtn">
+              🚀 Đăng Nhập
+            </button>
+            <div class="demo-hint">
+              🎓 Tài khoản demo: <strong>giaovien@demo.com</strong> / <strong>demo123</strong>
+            </div>
+          </div>
+
+          <!-- REGISTER FORM -->
+          <div id="teacherRegisterForm" class="teacher-form" style="display:none;">
+            <div class="input-group">
+              <label>👩‍🏫 Họ và tên</label>
+              <input class="input" type="text" id="regName" placeholder="Nguyễn Thị Lan">
+            </div>
+            <div class="input-group">
+              <label>📧 Email</label>
+              <input class="input" type="email" id="regEmail" placeholder="giaovien@truong.edu.vn">
+            </div>
+            <div class="input-group">
+              <label>🔒 Mật khẩu</label>
+              <div class="input-password-wrap">
+                <input class="input" type="password" id="regPass" placeholder="Tối thiểu 6 ký tự">
+                <button type="button" class="pass-toggle-btn" onclick="togglePass('regPass',this)" title="Hiện/ẩn">👁️</button>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>🔒 Xác nhận mật khẩu</label>
+              <div class="input-password-wrap">
+                <input class="input" type="password" id="regPassConfirm" placeholder="Nhập lại mật khẩu">
+                <button type="button" class="pass-toggle-btn" onclick="togglePass('regPassConfirm',this)" title="Hiện/ẩn">👁️</button>
+              </div>
+            </div>
+            <button class="btn btn-accent btn-block btn-lg" onclick="registerTeacher()" id="registerTeacherBtn">
+              🎉 Tạo Tài Khoản
+            </button>
+          </div>
+        </div>
+
+        <!-- Student Login -->
+        <div id="studentPanel" style="display:none;">
+          <div id="studentMethodSelect">
+            <p style="text-align:center;color:var(--text-muted);font-size:0.88rem;margin-bottom:16px;">
+              Chọn cách đăng nhập của bạn 👇
+            </p>
+            <div class="student-login-methods">
+              <div class="student-method-card" onclick="showStudentMethod('class')">
+                <div class="student-method-icon">🏫</div>
+                <div class="student-method-label">Chọn Lớp & Tên</div>
+                <div class="student-method-desc">Tìm lớp và chọn tên học sinh</div>
+              </div>
+              <div class="student-method-card" onclick="showStudentMethod('link')">
+                <div class="student-method-icon">🔗</div>
+                <div class="student-method-label">Nhập Link</div>
+                <div class="student-method-desc">Dán link đăng nhập từ giáo viên</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Class picker -->
+          <div id="studentClassPicker" style="display:none;">
+            <div class="back-btn" onclick="backToMethod()">← Quay lại</div>
+            <div class="class-picker" id="classPicker"></div>
+          </div>
+
+          <!-- Student list -->
+          <div id="studentListView" style="display:none;">
+            <div class="back-btn" onclick="backToClassPicker()">← Chọn lớp khác</div>
+            <div style="margin-bottom:12px; font-weight:700; font-size:0.9rem;">Chọn tên của bạn:</div>
+            <div class="student-list-small" id="studentListSmall"></div>
+          </div>
+
+          <!-- Link input -->
+          <div id="studentLinkInput" style="display:none;">
+            <div class="back-btn" onclick="backToMethod()">← Quay lại</div>
+            <div class="input-group">
+              <label>🔗 Link đăng nhập</label>
+              <input class="input" type="text" id="studentLinkVal" placeholder="Dán link đăng nhập vào đây...">
+            </div>
+            <button class="btn btn-accent btn-block mt-12" onclick="loginByLink()">
+              ✅ Đăng Nhập
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div style="text-align:center;margin-top:16px;font-size:0.78rem;color:var(--text-dim);">
+        Made with ❤️ for students • Little Town v1.0
+        <br><br>
+        <button onclick="resetDemo()" style="background:none;border:1px solid rgba(255,255,255,0.1);color:var(--text-dim);padding:4px 12px;border-radius:20px;font-size:0.72rem;cursor:pointer;transition:all 0.2s;" 
+          onmouseover="this.style.borderColor='rgba(255,255,255,0.3)';this.style.color='var(--text-muted)'"
+          onmouseout="this.style.borderColor='rgba(255,255,255,0.1)';this.style.color='var(--text-dim)'">
+          🔄 Reset dữ liệu demo
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast-container"></div>
+
+  <script src="js/data.js"></script>
+  <script src="js/sync.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    // ---- INIT (load from server first, then init) ----
+    async function bootApp() {
+      // Load dữ liệu từ server nếu đang chạy qua http://
+      await SYNC.load();
+
+      // Áp theme mới nhất từ server
+      const t = localStorage.getItem('lt_theme') || 'dark';
+      if (t === 'light') {
+        document.body.classList.add('light-mode');
+      } else {
+        document.body.classList.remove('light-mode');
+      }
+
+      AUTH.initDefaultData();
+
+      // Check nếu có token học sinh trong URL (lần đầu click link)
+      const studentToken = AUTH.checkStudentToken();
+      if (studentToken) {
+        const result = AUTH.studentLogin(studentToken);
+        if (result.success) {
+          // Xóa token ra khỏi URL để gọn hơn (không ảnh hưởng localStorage)
+          window.history.replaceState({}, '', window.location.pathname);
+          window.location.href = 'student.html';
+          return;
+        } else {
+          // Hiện thông báo lỗi nhẹ
+          setTimeout(() => showToast('Không tìm thấy tài khoản. Vui lòng liên hệ giáo viên!', 'error'), 300);
+        }
+      }
+
+      // Check nếu thiết bị này đã từng đăng nhập (auto-login bằng device ID)
+      const deviceStudentId = AUTH.getDeviceStudentId();
+      if (deviceStudentId) {
+        const result = AUTH.studentLogin(deviceStudentId);
+        if (result.success) {
+          window.location.href = 'student.html';
+          return;
+        } else {
+          // ID không còn tồn tại, xóa bộ nhớ thiết bị
+          AUTH.clearDeviceStudent();
+        }
+      }
+
+      // Check nếu đã đăng nhập (session còn tồn tại)
+      if (AUTH.getCurrentTeacher()) { window.location.href = 'teacher.html'; return; }
+      if (AUTH.getCurrentStudent()) { window.location.href = 'student.html'; return; }
+    }
+    bootApp();
+
+    // ---- Áp theme lưu trước ----
+    const _savedTheme = localStorage.getItem('lt_theme') || 'dark';
+    if (_savedTheme === 'light') document.body.classList.add('light-mode');
+
+    // ---- STARS ANIMATION ----
+    const starsLayer = document.getElementById('starsLayer');
+    for (let i = 0; i < 80; i++) {
+      const star = document.createElement('div');
+      star.className = 'star-dot';
+      const size = Math.random() * 3 + 1;
+      star.style.cssText = `
+        width:${size}px; height:${size}px;
+        left:${Math.random() * 100}%; top:${Math.random() * 70}%;
+        --dur:${2 + Math.random() * 3}s; --delay:${Math.random() * 4}s;
+        opacity:${0.3 + Math.random() * 0.7};
+      `;
+      starsLayer.appendChild(star);
+    }
+
+    // ---- TAB SWITCH (main: teacher/student) ----
+    function switchLoginTab(tab) {
+      document.getElementById('teacherPanel').style.display = tab === 'teacher' ? 'block' : 'none';
+      document.getElementById('studentPanel').style.display = tab === 'student' ? 'block' : 'none';
+      document.getElementById('tabTeacher').className = 'login-tab' + (tab === 'teacher' ? ' active' : '');
+      document.getElementById('tabStudent').className = 'login-tab' + (tab === 'student' ? ' active' : '');
+    }
+
+    // ---- TEACHER SUB-TAB: Đăng nhập / Đăng ký ----
+    function switchTeacherSubTab(mode) {
+      const isLogin = mode === 'login';
+      document.getElementById('teacherLoginForm').style.display   = isLogin ? 'block' : 'none';
+      document.getElementById('teacherRegisterForm').style.display = isLogin ? 'none'  : 'block';
+      document.getElementById('subTabLogin').className    = 'teacher-subtab' + (isLogin ? ' active' : '');
+      document.getElementById('subTabRegister').className = 'teacher-subtab' + (!isLogin ? ' active' : '');
+      // Clear form khi chuyển tab
+      if (!isLogin) {
+        document.getElementById('regName').value = '';
+        document.getElementById('regEmail').value = '';
+        document.getElementById('regPass').value = '';
+        document.getElementById('regPassConfirm').value = '';
+      }
+    }
+
+    // ---- TEACHER LOGIN ----
+    function loginTeacher() {
+      const email = document.getElementById('teacherEmail').value.trim();
+      const pass = document.getElementById('teacherPass').value;
+      if (!email || !pass) { showToast('Vui lòng nhập đầy đủ thông tin!', 'error'); return; }
+
+      const btn = document.getElementById('loginTeacherBtn');
+      btn.textContent = '⏳ Đang đăng nhập...'; btn.disabled = true;
+
+      setTimeout(() => {
+        const result = AUTH.teacherLogin(email, pass);
+        if (result.success) {
+          showToast('Chào mừng, ' + result.teacher.name + '! 👩‍🏫', 'success');
+          setTimeout(() => window.location.href = 'teacher.html', 800);
+        } else {
+          showToast(result.error, 'error');
+          btn.textContent = '🚀 Đăng Nhập'; btn.disabled = false;
+        }
+      }, 400);
+    }
+    document.getElementById('teacherPass').addEventListener('keypress', e => e.key === 'Enter' && loginTeacher());
+
+    // ---- TEACHER REGISTER ----
+    function registerTeacher() {
+      const name  = document.getElementById('regName').value.trim();
+      const email = document.getElementById('regEmail').value.trim().toLowerCase();
+      const pass  = document.getElementById('regPass').value;
+      const pass2 = document.getElementById('regPassConfirm').value;
+
+      // Validate
+      if (!name)  { showToast('Vui lòng nhập họ tên!', 'error'); return; }
+      if (!email) { showToast('Vui lòng nhập email!', 'error'); return; }
+      if (!/^[^@]+@[^@]+\.[^@]+$/.test(email)) { showToast('Email không hợp lệ!', 'error'); return; }
+      if (!pass)  { showToast('Vui lòng nhập mật khẩu!', 'error'); return; }
+      if (pass.length < 6) { showToast('Mật khẩu tối thiểu 6 ký tự!', 'error'); return; }
+      if (pass !== pass2)  { showToast('Mật khẩu xác nhận không khớp!', 'error'); return; }
+
+      const btn = document.getElementById('registerTeacherBtn');
+      btn.textContent = '⏳ Đang tạo tài khoản...'; btn.disabled = true;
+
+      setTimeout(() => {
+        const result = AUTH.teacherRegister({ name, email, password: pass });
+        if (result.success) {
+          showToast('Tài khoản đã được tạo! Chào mừng ' + name + ' 🎉', 'success');
+          setTimeout(() => window.location.href = 'teacher.html', 900);
+        } else {
+          showToast(result.error, 'error');
+          btn.textContent = '🎉 Tạo Tài Khoản'; btn.disabled = false;
+        }
+      }, 500);
+    }
+    document.getElementById('regPassConfirm').addEventListener('keypress', e => e.key === 'Enter' && registerTeacher());
+
+
+    // ---- STUDENT LOGIN METHODS ----
+    function showStudentMethod(method) {
+      document.getElementById('studentMethodSelect').style.display = 'none';
+      if (method === 'class') {
+        loadClasses();
+        document.getElementById('studentClassPicker').style.display = 'block';
+      } else {
+        document.getElementById('studentLinkInput').style.display = 'block';
+      }
+    }
+
+    function backToMethod() {
+      document.getElementById('studentClassPicker').style.display = 'none';
+      document.getElementById('studentListView').style.display = 'none';
+      document.getElementById('studentLinkInput').style.display = 'none';
+      document.getElementById('studentMethodSelect').style.display = 'block';
+    }
+
+    function backToClassPicker() {
+      document.getElementById('studentListView').style.display = 'none';
+      document.getElementById('studentClassPicker').style.display = 'block';
+    }
+
+    function loadClasses() {
+      const classes = DB.getClasses();
+      const students = DB.getStudents();
+      const picker = document.getElementById('classPicker');
+      picker.innerHTML = classes.length === 0 ? '<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-text">Chưa có lớp nào</div></div>' : 
+        classes.map(cls => {
+          const count = students.filter(s => s.classId === cls.id).length;
+          return `<div class="class-item" onclick="loadStudents('${cls.id}', '${cls.name}')">
+            <span class="class-item-icon">🏫</span>
+            <div>
+              <div class="class-item-name">${cls.name}</div>
+              <div class="class-item-count">${count} học sinh</div>
+            </div>
+            <span style="margin-left:auto;color:var(--text-dim)">›</span>
+          </div>`;
+        }).join('');
+    }
+
+    function loadStudents(classId, className) {
+      const students = DB.getStudents().filter(s => s.classId === classId);
+      document.getElementById('studentClassPicker').style.display = 'none';
+      document.getElementById('studentListView').style.display = 'block';
+
+      const listEl = document.getElementById('studentListSmall');
+      const genders = { male: '👦', female: '👧' };
+      listEl.innerHTML = students.length === 0 ? '<div class="empty-state"><div class="empty-state-text">Chưa có học sinh nào</div></div>' :
+        students.map(s => `
+          <div class="student-item-login" onclick="loginAsStudent('${s.id}')">
+            <div class="student-avatar-sm">${s.gender ? genders[s.gender] : '🧒'}</div>
+            <div class="student-name-sm">${s.name}</div>
+            <div class="student-pts-sm">⭐ ${s.points || 0}</div>
+          </div>
+        `).join('');
+    }
+
+    function loginAsStudent(studentId) {
+      const result = AUTH.studentLogin(studentId);
+      if (result.success) {
+        showToast('Chào ' + result.student.name + '! 🎉', 'success');
+        setTimeout(() => window.location.href = 'student.html', 600);
+      } else {
+        showToast(result.error, 'error');
+      }
+    }
+
+    function loginByLink() {
+      const val = document.getElementById('studentLinkVal').value.trim();
+      if (!val) { showToast('Vui lòng dán link vào!', 'error'); return; }
+      try {
+        const url = new URL(val);
+        const token = url.searchParams.get('student');
+        if (!token) throw new Error();
+        const studentId = atob(token);
+        loginAsStudent(studentId);
+      } catch (e) {
+        showToast('Link không hợp lệ!', 'error');
+      }
+    }
+
+    // ---- TOAST ----
+    function showToast(msg, type = 'info') {
+      const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+      const el = document.createElement('div');
+      el.className = `toast toast-${type}`;
+      el.innerHTML = `<span>${icons[type]}</span> ${msg}`;
+      document.getElementById('toast-container').appendChild(el);
+      setTimeout(() => el.remove(), 3100);
+    }
+
+    // ---- TOGGLE PASSWORD VISIBILITY ----
+    function togglePass(inputId, btn) {
+      const input = document.getElementById(inputId);
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '🙈';
+      } else {
+        input.type = 'password';
+        btn.textContent = '👁️';
+      }
+    }
+
+    // ---- RESET DEMO ----
+    async function resetDemo() {
+      if (!confirm('⚠️ Bạn chắc chắn muốn xóa toàn bộ dữ liệu và reset về demo ban đầu?')) return;
+      // Reset trên server (nếu chạy qua http)
+      await SYNC.reset();
+      // Reset tất cả dữ liệu (cả auth state)
+      ['lt_initialized','lt_teachers','lt_classes','lt_students','lt_history',
+       'lt_current_teacher','lt_current_student']
+        .forEach(k => localStorage.removeItem(k));
+      showToast('Đã reset! Đang tải lại...', 'info');
+      setTimeout(() => window.location.reload(), 800);
+    }
+  </script>
+</body>
+</html>

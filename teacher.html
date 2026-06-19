@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Little Town 🏘️ - Bảng Điều Khiển Giáo Viên</title>
+  <meta name="description" content="Little Town - Teacher Dashboard">
+  <link rel="stylesheet" href="css/main.css?v=2">
+  <link rel="stylesheet" href="css/teacher.css?v=2">
+  <link rel="stylesheet" href="css/shop.css?v=2">
+</head>
+<body>
+<div class="teacher-app" id="teacherApp">
+  <!-- SIDEBAR -->
+  <aside class="teacher-sidebar" id="teacherSidebar">
+    <div class="sidebar-logo">
+      <span class="sidebar-logo-icon">🏘️</span>
+      <div class="sidebar-logo-text">
+        <div class="title">Little Town</div>
+        <div class="sub">Teacher Portal</div>
+      </div>
+    </div>
+
+    <div class="sidebar-teacher-info" id="sidebarTeacherInfo">
+      <div class="sidebar-teacher-avatar" id="sidebarAvatar">👩‍🏫</div>
+      <div>
+        <div class="sidebar-teacher-name" id="sidebarName">Loading...</div>
+        <div class="sidebar-teacher-role">Giáo Viên</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">Tổng quan</div>
+      <button class="sidebar-nav-item active" onclick="showPage('dashboard')" id="nav-dashboard">
+        <span class="sidebar-nav-icon">📊</span> Dashboard
+      </button>
+
+      <div class="sidebar-section-label">Quản lý</div>
+      <button class="sidebar-nav-item" onclick="showPage('classes')" id="nav-classes">
+        <span class="sidebar-nav-icon">🏫</span> Lớp học
+      </button>
+      <button class="sidebar-nav-item" onclick="showPage('students')" id="nav-students">
+        <span class="sidebar-nav-icon">🧒</span> Học sinh
+      </button>
+      <button class="sidebar-nav-item" onclick="showPage('points')" id="nav-points">
+        <span class="sidebar-nav-icon">⭐</span> Cộng điểm
+      </button>
+
+      <div class="sidebar-section-label">Lịch sử</div>
+      <button class="sidebar-nav-item" onclick="showPage('history')" id="nav-history">
+        <span class="sidebar-nav-icon">📋</span> Lịch sử điểm
+      </button>
+
+      <div class="sidebar-section-label">Công cụ</div>
+      <button class="sidebar-nav-item" onclick="showPage('qrcodes')" id="nav-qrcodes">
+        <span class="sidebar-nav-icon">📱</span> QR & Link
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="sidebar-nav-item" onclick="AUTH.teacherLogout()" style="color:var(--secondary);">
+        <span class="sidebar-nav-icon">🚪</span> Đăng xuất
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="teacher-main">
+    <!-- TOPBAR -->
+    <div class="teacher-topbar">
+      <div class="topbar-title" id="topbarTitle">📊 Dashboard</div>
+      <div class="topbar-actions">
+        <button class="btn btn-ghost btn-sm btn-icon" id="themeToggleBtn" onclick="toggleTheme()" title="Đổi giao diện sáng/tối" style="font-size:1.2rem;">🌙</button>
+        <button class="btn btn-primary btn-sm" onclick="openAddStudentModal()">
+          ➕ Thêm học sinh
+        </button>
+        <button class="btn btn-warm btn-sm" onclick="openAddClassModal()">
+          🏫 Tạo lớp mới
+        </button>
+      </div>
+    </div>
+
+    <div class="teacher-content">
+
+      <!-- ===== DASHBOARD PAGE ===== -->
+      <div id="page-dashboard" class="page-view">
+        <div class="stats-overview" id="statsOverview"></div>
+
+        <div class="teacher-panels">
+          <!-- Quick class list -->
+          <div class="glass home-panel classes-panel">
+            <div class="panel-title"><span class="panel-title-icon">🏫</span> Các Lớp</div>
+            <div class="class-list" id="dashClassList"></div>
+            <button class="btn btn-ghost btn-sm btn-block mt-12" onclick="openAddClassModal()">
+              ➕ Tạo lớp mới
+            </button>
+          </div>
+
+          <!-- Recent activity -->
+          <div class="glass home-panel">
+            <div class="panel-title"><span class="panel-title-icon">📋</span> Hoạt Động Gần Đây</div>
+            <div class="history-list" id="dashHistory"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== CLASSES PAGE ===== -->
+      <div id="page-classes" class="page-view" style="display:none;">
+        <div class="teacher-panels">
+          <div class="glass home-panel">
+            <div class="section-header">
+              <div class="section-title">🏫 Danh Sách <span>Lớp Học</span></div>
+              <button class="btn btn-primary btn-sm" onclick="openAddClassModal()">➕ Tạo lớp</button>
+            </div>
+            <div class="class-list" id="classListFull"></div>
+          </div>
+
+          <div class="glass home-panel" id="classDetailPanel">
+            <div class="section-title mb-16">👥 Chi tiết lớp</div>
+            <div id="classDetailContent" class="empty-state">
+              <div class="empty-state-icon">👈</div>
+              <div class="empty-state-text">Chọn một lớp để xem chi tiết</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== STUDENTS PAGE ===== -->
+      <div id="page-students" class="page-view" style="display:none;">
+        <div class="glass home-panel">
+          <div class="students-panel-header">
+            <div class="section-title">🧒 Danh Sách <span>Học Sinh</span></div>
+            <div class="students-search">
+              <select class="students-search-input" id="filterClass" onchange="renderStudentsTable()" style="width:160px;">
+                <option value="">Tất cả lớp</option>
+              </select>
+              <input class="students-search-input" type="text" id="searchStudents" placeholder="🔍 Tìm học sinh..." oninput="renderStudentsTable()">
+            </div>
+          </div>
+          <table class="students-table" id="studentsTable">
+            <thead>
+              <tr>
+                <th>Học sinh</th>
+                <th>Lớp</th>
+                <th>Điểm ⭐</th>
+                <th>Thú cưng</th>
+                <th>Trạng thái</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody id="studentsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== POINTS PAGE ===== -->
+      <div id="page-points" class="page-view" style="display:none;">
+        <div class="glass home-panel">
+          <div class="section-title mb-16">⭐ Cộng / Trừ <span>Điểm Học Sinh</span></div>
+
+          <!-- Quick add to class -->
+          <div style="margin-bottom:24px;">
+            <div class="input-group mb-12">
+              <label>Chọn lớp</label>
+              <select class="input" id="pointsClassFilter" onchange="filterStudentsForPoints()">
+                <option value="">-- Chọn lớp --</option>
+              </select>
+            </div>
+            <div id="pointsStudentList" style="display:flex;flex-direction:column;gap:8px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== HISTORY PAGE ===== -->
+      <div id="page-history" class="page-view" style="display:none;">
+        <div class="glass home-panel">
+          <div class="section-header">
+            <div class="section-title">📋 Lịch Sử <span>Thay Đổi Điểm</span></div>
+            <div>
+              <select class="input" id="historyClassFilter" onchange="renderHistory()" style="width:180px;padding:9px 14px;font-size:0.88rem;">
+                <option value="">Tất cả lớp</option>
+              </select>
+            </div>
+          </div>
+          <div class="history-list" id="historyListFull"></div>
+        </div>
+      </div>
+
+      <!-- ===== QR CODES PAGE ===== -->
+      <div id="page-qrcodes" class="page-view" style="display:none;">
+        <div class="glass home-panel">
+          <div class="section-header">
+            <div class="section-title">📱 QR Code & <span>Link Đăng Nhập</span></div>
+            <select class="input" id="qrClassFilter" onchange="renderQRList()" style="width:180px;padding:9px 14px;font-size:0.88rem;">
+              <option value="">Tất cả lớp</option>
+            </select>
+          </div>
+          <div style="color:var(--text-muted);font-size:0.85rem;margin-bottom:16px;">
+            💡 Chia sẻ link hoặc QR code dưới đây cho học sinh để đăng nhập
+          </div>
+
+          <!-- Network info -->
+          <div class="glass" style="padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+            <div>
+              <div style="font-size:0.8rem;font-weight:700;color:var(--text-muted);margin-bottom:4px;">🌐 Link mạng nội bộ (mở trên thiết bị khác cùng WiFi)</div>
+              <div id="networkUrlDisplay" style="font-size:0.82rem;">—</div>
+            </div>
+            <button class="btn btn-accent btn-sm" onclick="copyNetworkUrl()">📋 Sao chép</button>
+          </div>
+
+          <div id="qrListContainer" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;"></div>
+        </div>
+      </div>
+
+    </div><!-- /teacher-content -->
+  </main>
+</div>
+
+<!-- ===== MODALS ===== -->
+
+<!-- Add Class Modal -->
+<div class="modal-overlay" id="addClassModal">
+  <div class="modal glass">
+    <div class="modal-header">
+      <div class="modal-title">🏫 Tạo Lớp Mới</div>
+      <button class="btn btn-ghost btn-sm btn-icon" onclick="closeModal('addClassModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="input-group">
+        <label>Tên lớp</label>
+        <input class="input" type="text" id="newClassName" placeholder="VD: Lớp 3A, Nhóm Toán...">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('addClassModal')">Hủy</button>
+      <button class="btn btn-primary" onclick="addClass()">✅ Tạo lớp</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Student Modal -->
+<div class="modal-overlay" id="addStudentModal">
+  <div class="modal glass">
+    <div class="modal-header">
+      <div class="modal-title">➕ Thêm Học Sinh</div>
+      <button class="btn btn-ghost btn-sm btn-icon" onclick="closeModal('addStudentModal')">✕</button>
+    </div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:16px;">
+      <div class="input-group">
+        <label>Tên học sinh</label>
+        <input class="input" type="text" id="newStudentName" placeholder="Nguyễn Văn An...">
+      </div>
+      <div class="input-group">
+        <label>Lớp</label>
+        <select class="input" id="newStudentClass">
+          <option value="">-- Chọn lớp --</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>Điểm ban đầu</label>
+        <input class="input" type="number" id="newStudentPoints" value="0" min="0">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('addStudentModal')">Hủy</button>
+      <button class="btn btn-primary" onclick="addStudent()">✅ Thêm học sinh</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Remove Points Modal -->
+<div class="modal-overlay" id="pointsModal">
+  <div class="modal glass">
+    <div class="modal-header">
+      <div class="modal-title" id="pointsModalTitle">⭐ Cộng Điểm</div>
+      <button class="btn btn-ghost btn-sm btn-icon" onclick="closeModal('pointsModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;padding:14px;background:var(--bg-surface2);border-radius:var(--radius-sm);">
+        <div class="avatar" id="pointsStudentAvatar">🧒</div>
+        <div>
+          <div style="font-weight:800;" id="pointsStudentName">-</div>
+          <div style="font-size:0.8rem;color:var(--text-muted);">Điểm hiện tại: <span style="color:var(--warm-light);font-weight:800;" id="pointsCurrentVal">0</span> ⭐</div>
+        </div>
+      </div>
+      <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:8px;">Chọn nhanh:</div>
+      <div class="points-preset" id="pointsPreset">
+        <button class="pts-preset-btn" onclick="setPointsPreset(5)">+5</button>
+        <button class="pts-preset-btn" onclick="setPointsPreset(10)">+10</button>
+        <button class="pts-preset-btn" onclick="setPointsPreset(20)">+20</button>
+        <button class="pts-preset-btn" onclick="setPointsPreset(50)">+50</button>
+        <button class="pts-preset-btn" onclick="setPointsPreset(100)">+100</button>
+        <button class="pts-preset-btn negative" onclick="setPointsPreset(-10)">-10</button>
+        <button class="pts-preset-btn negative" onclick="setPointsPreset(-50)">-50</button>
+      </div>
+      <div class="points-input-big">
+        <button class="btn btn-ghost btn-icon" onclick="changePointsBy(-1)" style="font-size:1.5rem;width:48px;height:48px;">−</button>
+        <input type="number" id="pointsAmount" value="10" min="-9999" max="9999">
+        <button class="btn btn-ghost btn-icon" onclick="changePointsBy(1)" style="font-size:1.5rem;width:48px;height:48px;">+</button>
+      </div>
+      <div class="input-group">
+        <label>Ghi chú (không bắt buộc)</label>
+        <input class="input" type="text" id="pointsNote" placeholder="VD: Hoàn thành bài tập xuất sắc...">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('pointsModal')">Hủy</button>
+      <button class="btn btn-accent" onclick="confirmAddPoints()">✅ Xác nhận</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal glass" style="max-width:380px;">
+    <div class="modal-header">
+      <div class="modal-title">⚠️ Xác Nhận Xóa</div>
+      <button class="btn btn-ghost btn-sm btn-icon" onclick="closeModal('deleteModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p id="deleteModalMsg" style="color:var(--text-muted);">Bạn chắc chắn muốn xóa?</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('deleteModal')">Hủy</button>
+      <button class="btn btn-secondary" id="deleteConfirmBtn">🗑️ Xóa</button>
+    </div>
+  </div>
+</div>
+
+<!-- QR Display Modal -->
+<div class="modal-overlay" id="qrModal">
+  <div class="modal glass" style="max-width:380px;">
+    <div class="modal-header">
+      <div class="modal-title">📱 Thông Tin Đăng Nhập</div>
+      <button class="btn btn-ghost btn-sm btn-icon" onclick="closeModal('qrModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="qr-display">
+        <div class="qr-student-name" id="qrStudentName">-</div>
+        <div class="qr-frame" id="qrFrame">
+          <div id="qrCodeDisplay"></div>
+        </div>
+        <div style="font-size:0.82rem;color:var(--text-muted);">Link đăng nhập:</div>
+        <div class="qr-link-display" id="qrLinkDisplay">-</div>
+        <button class="btn btn-primary btn-sm" onclick="copyLink()">📋 Sao chép link</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast-container"></div>
+
+<script src="js/data.js"></script>
+<script src="js/sync.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/ui.js"></script>
+<script>
+// ---- GUARD ----
+AUTH.initDefaultData();
+const teacher = AUTH.getCurrentTeacher();
+if (!teacher) { window.location.href = 'index.html'; }
+
+// ---- THEME ----
+(function() {
+  const t = localStorage.getItem('lt_theme') || 'dark';
+  if (t === 'light') {
+    document.body.classList.add('light-mode');
+    const btn = document.getElementById('themeToggleBtn');
+    if (btn) btn.textContent = '☀️';
+  }
+})();
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light-mode');
+  localStorage.setItem('lt_theme', isLight ? 'light' : 'dark');
+  const btn = document.getElementById('themeToggleBtn');
+  btn.textContent = isLight ? '☀️' : '🌙';
+  showToast(isLight ? '🌞 Giao diện sáng' : '🌙 Giao diện tối', 'info');
+}
+
+// ---- SYNC: Boot (file:// tải thẳng, http:// sync rồi render) ----
+let _teacherInited = false;
+let currentPage = 'dashboard';
+
+function _startTeacher() {
+  if (_teacherInited) return;
+  _teacherInited = true;
+  applyTheme();
+  renderDashboard();
+  startTeacherPolling();
+}
+SYNC.load().then(_startTeacher);
+// Show network URL
+SYNC.showNetworkInfo('networkUrlDisplay');
+
+function startTeacherPolling() {
+  setInterval(async () => {
+    const dataChanged = await SYNC.load();
+    if (dataChanged) {
+      console.log('Dữ liệu đã được đồng bộ cho giáo viên!');
+      applyTheme();
+      if (currentPage === 'dashboard') renderDashboard();
+      else if (currentPage === 'classes') renderClasses();
+      else if (currentPage === 'students') renderStudentsTable();
+      else if (currentPage === 'points') renderPointsPage();
+      else if (currentPage === 'history') renderHistory();
+      else if (currentPage === 'qrcodes') renderQRList();
+    }
+  }, 8000);
+}
+
+function applyTheme() {
+  const t = localStorage.getItem('lt_theme') || 'dark';
+  const isLight = t === 'light';
+  if (isLight) {
+    document.body.classList.add('light-mode');
+  } else {
+    document.body.classList.remove('light-mode');
+  }
+  const btn = document.getElementById('themeToggleBtn');
+  if (btn) btn.textContent = isLight ? '☀️' : '🌙';
+}
+
+// ---- INIT ----
+let currentStudentForPoints = null;
+let deleteCallback = null;
+
+document.getElementById('sidebarName').textContent = teacher?.name || 'Giáo Viên';
+
+// ---- NAVIGATION ----
+function showPage(page) {
+  currentPage = page;
+  document.querySelectorAll('.page-view').forEach(p => p.style.display = 'none');
+  document.querySelectorAll('.sidebar-nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).style.display = 'block';
+  document.getElementById('nav-' + page)?.classList.add('active');
+
+  const titles = { dashboard:'📊 Dashboard', classes:'🏫 Lớp học', students:'🧒 Học sinh', points:'⭐ Cộng điểm', history:'📋 Lịch sử', qrcodes:'📱 QR & Link' };
+  document.getElementById('topbarTitle').textContent = titles[page] || page;
+
+  if (page === 'dashboard') renderDashboard();
+  else if (page === 'classes') renderClasses();
+  else if (page === 'students') renderStudentsTable();
+  else if (page === 'points') renderPointsPage();
+  else if (page === 'history') renderHistory();
+  else if (page === 'qrcodes') renderQRList();
+}
+
+// ---- RENDER DASHBOARD ----
+function renderDashboard() {
+  const students = DB.getStudents();
+  const classes = DB.getClasses();
+  const history = DB.getHistory();
+  const totalPts = students.reduce((s,st) => s + (st.points||0), 0);
+
+  document.getElementById('statsOverview').innerHTML = `
+    <div class="glass stat-card" style="--accent-color:var(--primary)">
+      <div class="stat-card-icon">🧒</div>
+      <div class="stat-card-value">${students.length}</div>
+      <div class="stat-card-label">Tổng học sinh</div>
+    </div>
+    <div class="glass stat-card" style="--accent-color:var(--secondary)">
+      <div class="stat-card-icon">🏫</div>
+      <div class="stat-card-value">${classes.length}</div>
+      <div class="stat-card-label">Số lớp học</div>
+    </div>
+    <div class="glass stat-card" style="--accent-color:var(--warm)">
+      <div class="stat-card-icon">⭐</div>
+      <div class="stat-card-value">${totalPts.toLocaleString()}</div>
+      <div class="stat-card-label">Tổng điểm đã cộng</div>
+    </div>
+    <div class="glass stat-card" style="--accent-color:var(--accent)">
+      <div class="stat-card-icon">📋</div>
+      <div class="stat-card-value">${history.length}</div>
+      <div class="stat-card-label">Giao dịch điểm</div>
+    </div>
+  `;
+
+  document.getElementById('dashClassList').innerHTML = classes.map(cls => {
+    const cnt = students.filter(s => s.classId === cls.id).length;
+    return `<div class="class-list-item" onclick="showPage('classes')">
+      <div class="class-list-icon">🏫</div>
+      <div>
+        <div class="class-list-name">${cls.name}</div>
+        <div class="class-list-count">${cnt} học sinh</div>
+      </div>
+      <span class="class-list-chevron">›</span>
+    </div>`;
+  }).join('') || '<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-text">Chưa có lớp nào</div></div>';
+
+  renderHistoryList(history.slice(0, 8), document.getElementById('dashHistory'));
+}
+
+// ---- RENDER CLASSES ----
+function renderClasses() {
+  const classes = DB.getClasses();
+  const students = DB.getStudents();
+
+  const renderList = (containerId) => {
+    document.getElementById(containerId).innerHTML = classes.map(cls => {
+      const cnt = students.filter(s => s.classId === cls.id).length;
+      return `<div class="class-list-item" onclick="showClassDetail('${cls.id}')">
+        <div class="class-list-icon">🏫</div>
+        <div>
+          <div class="class-list-name">${cls.name}</div>
+          <div class="class-list-count">${cnt} học sinh</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();confirmDelete('Xóa lớp <b>${cls.name}</b>? Tất cả học sinh trong lớp cũng sẽ bị xóa.', () => deleteClass('${cls.id}'))">🗑️</button>
+      </div>`;
+    }).join('') || '<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-text">Chưa có lớp nào</div></div>';
+  };
+
+  renderList('classListFull');
+}
+
+function showClassDetail(classId) {
+  const cls = DB.getClasses().find(c => c.id === classId);
+  const students = DB.getStudents().filter(s => s.classId === classId);
+
+  document.getElementById('classDetailContent').innerHTML = `
+    <div style="margin-bottom:16px;">
+      <div style="font-size:1.1rem;font-weight:800;">${cls.name}</div>
+      <div style="font-size:0.82rem;color:var(--text-muted);">Tạo lúc: ${new Date(cls.createdAt).toLocaleDateString('vi-VN')}</div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div style="font-weight:700;">${students.length} học sinh</div>
+      <button class="btn btn-primary btn-sm" onclick="openAddStudentModal('${classId}')">➕ Thêm học sinh</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      ${students.map(s => `
+        <div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg-surface2);border-radius:var(--radius-sm);">
+          <div class="avatar" style="width:36px;height:36px;font-size:1rem;">${s.gender === 'male' ? '👦' : s.gender === 'female' ? '👧' : '🧒'}</div>
+          <div style="flex:1;">
+            <div style="font-weight:700;font-size:0.88rem;">${s.name}</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);">${s.pets?.length || 0} thú cưng</div>
+          </div>
+          <div style="font-weight:800;color:var(--warm-light);font-size:0.88rem;">⭐ ${s.points || 0}</div>
+          <button class="btn btn-accent btn-sm" onclick="openPointsModal('${s.id}')">+⭐</button>
+          <button class="btn btn-ghost btn-sm" onclick="openQRModal('${s.id}')">📱</button>
+          <button class="btn btn-ghost btn-sm" style="color:var(--secondary);" onclick="confirmDelete('Xóa học sinh <b>${s.name}</b>?', () => deleteStudent('${s.id}', '${classId}'))">🗑️</button>
+        </div>
+      `).join('') || '<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-text">Chưa có học sinh</div></div>'}
+    </div>
+  `;
+
+  document.querySelectorAll('.class-list-item').forEach(el => el.classList.remove('active'));
+}
+
+// ---- RENDER STUDENTS TABLE ----
+function renderStudentsTable() {
+  const classFilter = document.getElementById('filterClass')?.value || '';
+  const search = document.getElementById('searchStudents')?.value?.toLowerCase() || '';
+  const classes = DB.getClasses();
+
+  // Populate class filter
+  const filterEl = document.getElementById('filterClass');
+  if (filterEl && filterEl.options.length <= 1) {
+    classes.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.id; opt.textContent = c.name;
+      filterEl.appendChild(opt);
+    });
+  }
+
+  let students = DB.getStudents();
+  if (classFilter) students = students.filter(s => s.classId === classFilter);
+  if (search) students = students.filter(s => s.name.toLowerCase().includes(search));
+
+  document.getElementById('studentsTableBody').innerHTML = students.map(s => {
+    const cls = classes.find(c => c.id === s.classId);
+    return `<tr>
+      <td>
+        <div class="student-row-avatar">
+          <div class="avatar" style="width:36px;height:36px;font-size:1rem;">${s.gender === 'male' ? '👦' : s.gender === 'female' ? '👧' : '🧒'}</div>
+          <div>
+            <div class="student-row-name">${s.name}</div>
+            <div style="font-size:0.72rem;color:var(--text-dim);">${s.id}</div>
+          </div>
+        </div>
+      </td>
+      <td><span class="badge badge-primary">${cls?.name || 'N/A'}</span></td>
+      <td><span class="student-row-points">⭐ ${s.points || 0}</span></td>
+      <td>${s.pets?.map(p => p.emoji || (p.type === 'dog' ? '🐕' : '🐈')).join(' ') || '—'}</td>
+      <td>${s.setupDone ? '<span class="badge badge-success">✅ Đã cài đặt</span>' : '<span class="badge badge-warm">⏳ Chờ</span>'}</td>
+      <td>
+        <div class="student-row-actions">
+          <button class="btn btn-accent btn-sm" onclick="openPointsModal('${s.id}')">+⭐</button>
+          <button class="btn btn-primary btn-sm" onclick="openQRModal('${s.id}')">📱</button>
+          <button class="btn btn-ghost btn-sm" style="color:var(--secondary);" onclick="confirmDelete('Xóa <b>${s.name}</b>?', () => deleteStudent('${s.id}'))">🗑️</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ---- POINTS PAGE ----
+function renderPointsPage() {
+  const classes = DB.getClasses();
+  const sel = document.getElementById('pointsClassFilter');
+  sel.innerHTML = '<option value="">-- Chọn lớp --</option>';
+  classes.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.id; opt.textContent = c.name;
+    sel.appendChild(opt);
+  });
+}
+
+function filterStudentsForPoints() {
+  const classId = document.getElementById('pointsClassFilter').value;
+  if (!classId) { document.getElementById('pointsStudentList').innerHTML = ''; return; }
+  const students = DB.getStudents().filter(s => s.classId === classId);
+  document.getElementById('pointsStudentList').innerHTML = students.map(s => `
+    <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg-surface2);border-radius:var(--radius-sm);">
+      <div class="avatar" style="width:38px;height:38px;font-size:1.1rem;">${s.gender === 'male' ? '👦' : s.gender === 'female' ? '👧' : '🧒'}</div>
+      <div style="flex:1;">
+        <div style="font-weight:700;">${s.name}</div>
+        <div style="font-size:0.78rem;color:var(--text-muted);">⭐ ${s.points || 0} điểm</div>
+      </div>
+      <button class="btn btn-accent btn-sm" onclick="openPointsModal('${s.id}')">➕ Cộng điểm</button>
+      <button class="btn btn-secondary btn-sm" onclick="openPointsModal('${s.id}', true)">➖ Trừ điểm</button>
+    </div>
+  `).join('');
+}
+
+// ---- HISTORY ----
+function renderHistory() {
+  const classFilter = document.getElementById('historyClassFilter')?.value || '';
+  const classes = DB.getClasses();
+  const students = DB.getStudents();
+
+  const histSel = document.getElementById('historyClassFilter');
+  if (histSel && histSel.options.length <= 1) {
+    classes.forEach(c => { const o = document.createElement('option'); o.value = c.id; o.textContent = c.name; histSel.appendChild(o); });
+  }
+
+  let history = DB.getHistory();
+  if (classFilter) {
+    const classStudents = students.filter(s => s.classId === classFilter).map(s => s.id);
+    history = history.filter(h => classStudents.includes(h.studentId));
+  }
+
+  renderHistoryList(history, document.getElementById('historyListFull'));
+}
+
+function renderHistoryList(history, container) {
+  if (!container) return;
+  container.innerHTML = history.length === 0 ?
+    '<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-text">Chưa có lịch sử</div></div>' :
+    history.map(h => {
+      const isPos = h.change >= 0;
+      const time = new Date(h.timestamp);
+      return `<div class="history-item ${isPos ? 'positive' : 'negative'}">
+        <div class="avatar" style="width:36px;height:36px;font-size:1rem;">🧒</div>
+        <div class="history-info">
+          <div class="history-student">${h.studentName}</div>
+          <div class="history-teacher">Bởi: ${h.teacherName}</div>
+          ${h.note ? `<div class="history-note">📝 ${h.note}</div>` : ''}
+        </div>
+        <div>
+          <div class="history-change ${isPos ? 'positive' : 'negative'}">${isPos ? '+' : ''}${h.change} ⭐</div>
+          <div class="history-time">${time.toLocaleDateString('vi-VN')} ${time.toLocaleTimeString('vi-VN', {hour:'2-digit',minute:'2-digit'})}</div>
+        </div>
+      </div>`;
+    }).join('');
+}
+
+// ---- QR CODES ----
+function renderQRList() {
+  const classFilter = document.getElementById('qrClassFilter')?.value || '';
+  const classes = DB.getClasses();
+  let students = DB.getStudents();
+
+  const qrSel = document.getElementById('qrClassFilter');
+  if (qrSel && qrSel.options.length <= 1) {
+    classes.forEach(c => { const o = document.createElement('option'); o.value = c.id; o.textContent = c.name; qrSel.appendChild(o); });
+  }
+
+  if (classFilter) students = students.filter(s => s.classId === classFilter);
+
+  document.getElementById('qrListContainer').innerHTML = students.map(s => {
+    const cls = classes.find(c => c.id === s.classId);
+    const link = AUTH.generateStudentUrl(s.id);
+    return `<div class="glass home-panel" style="padding:16px;text-align:center;">
+      <div style="font-weight:800;font-size:1rem;margin-bottom:4px;">${s.name}</div>
+      <div class="badge badge-primary" style="margin-bottom:12px;">${cls?.name || 'N/A'}</div>
+      <div style="background:white;border-radius:10px;padding:12px;margin-bottom:12px;font-size:0.7rem;color:#333;word-break:break-all;line-height:1.4;">
+        📱 Quét QR hoặc dùng link:<br><br>
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=${encodeURIComponent(link)}" alt="Mã QR" style="width:110px;height:110px;display:block;margin:8px auto;border:1px solid #ddd;border-radius:6px;background:#fff;padding:4px;" />
+        <small>${link.substring(0, 40)}...</small>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:center;">
+        <button class="btn btn-primary btn-sm" onclick="openQRModal('${s.id}')">📱 Xem QR</button>
+        <button class="btn btn-ghost btn-sm" onclick="copyLinkFor('${s.id}')">📋 Copy</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ---- MODALS ----
+function openAddClassModal() {
+  document.getElementById('newClassName').value = '';
+  openModal('addClassModal');
+}
+
+function openAddStudentModal(preClassId = '') {
+  document.getElementById('newStudentName').value = '';
+  document.getElementById('newStudentPoints').value = '0';
+  const sel = document.getElementById('newStudentClass');
+  sel.innerHTML = '<option value="">-- Chọn lớp --</option>';
+  DB.getClasses().forEach(c => {
+    const o = document.createElement('option');
+    o.value = c.id; o.textContent = c.name;
+    if (c.id === preClassId) o.selected = true;
+    sel.appendChild(o);
+  });
+  openModal('addStudentModal');
+}
+
+function openPointsModal(studentId, deduct = false) {
+  const student = DB.getStudent(studentId);
+  if (!student) return;
+  currentStudentForPoints = studentId;
+  document.getElementById('pointsModalTitle').textContent = deduct ? '➖ Trừ Điểm' : '⭐ Cộng Điểm';
+  document.getElementById('pointsStudentName').textContent = student.name;
+  document.getElementById('pointsStudentAvatar').textContent = student.gender === 'male' ? '👦' : '👧';
+  document.getElementById('pointsCurrentVal').textContent = student.points || 0;
+  document.getElementById('pointsAmount').value = deduct ? -10 : 10;
+  document.getElementById('pointsNote').value = '';
+  openModal('pointsModal');
+}
+
+function openQRModal(studentId) {
+  const student = DB.getStudent(studentId);
+  if (!student) return;
+  const link = AUTH.generateStudentUrl(studentId);
+  document.getElementById('qrStudentName').textContent = student.name;
+  document.getElementById('qrLinkDisplay').textContent = link;
+  document.getElementById('qrCodeDisplay').innerHTML = `
+    <div style="text-align:center;padding:10px;">
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(link)}" 
+           alt="Mã QR" 
+           style="width:200px;height:200px;display:block;margin:0 auto 12px;border:1px solid #ddd;border-radius:8px;background:#fff;padding:6px;" />
+      <div style="font-weight:700;color:var(--primary);font-size:0.88rem;margin-bottom:4px;">Mã Đăng Nhập Học Sinh</div>
+      <div style="font-size:0.75rem;color:var(--text-muted);">Quét mã bằng iPad/Điện thoại để đăng nhập ngay</div>
+    </div>`;
+  openModal('qrModal');
+}
+
+function copyLink() {
+  const link = document.getElementById('qrLinkDisplay').textContent;
+  navigator.clipboard.writeText(link).then(() => showToast('Đã sao chép link! 📋', 'success'));
+}
+
+function copyLinkFor(studentId) {
+  const link = AUTH.generateStudentUrl(studentId);
+  navigator.clipboard.writeText(link).then(() => showToast('Đã sao chép link! 📋', 'success'));
+}
+
+async function copyNetworkUrl() {
+  if (SYNC.isFirebase && SYNC.isFirebase()) {
+    // Đang dùng Firebase
+    const url = window.location.origin + window.location.pathname.replace('teacher.html', '').replace(/\/$/, '');
+    navigator.clipboard.writeText(url).then(() => showToast('Đã sao chép: ' + url, 'success'));
+  } else {
+    try {
+      const res = await fetch('/api/info');
+      const info = await res.json();
+      const url = (info.network && info.network[0]) || info.localhost;
+      navigator.clipboard.writeText(url).then(() => showToast('Đã sao chép: ' + url, 'success'));
+    } catch(e) {
+      showToast('Chưa kết nối server!', 'error');
+    }
+  }
+}
+
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+// Click outside modal to close
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('active'); });
+});
+
+// ---- ACTIONS ----
+function addClass() {
+  const name = document.getElementById('newClassName').value.trim();
+  if (!name) { showToast('Vui lòng nhập tên lớp!', 'error'); return; }
+  DB.addClass({ name, teacherId: teacher.id });
+  closeModal('addClassModal');
+  showToast('Đã tạo lớp ' + name + '! 🏫', 'success');
+  renderDashboard();
+}
+
+function addStudent() {
+  const name = document.getElementById('newStudentName').value.trim();
+  const classId = document.getElementById('newStudentClass').value;
+  const points = parseInt(document.getElementById('newStudentPoints').value) || 0;
+  if (!name) { showToast('Vui lòng nhập tên học sinh!', 'error'); return; }
+  if (!classId) { showToast('Vui lòng chọn lớp!', 'error'); return; }
+  const s = DB.addStudent({ name, classId, points });
+  closeModal('addStudentModal');
+  showToast('Đã thêm ' + name + '! 🎉', 'success');
+  renderStudentsTable();
+}
+
+function setPointsPreset(val) {
+  document.getElementById('pointsAmount').value = val;
+}
+function changePointsBy(delta) {
+  const el = document.getElementById('pointsAmount');
+  el.value = (parseInt(el.value) || 0) + delta;
+}
+
+function confirmAddPoints() {
+  const amount = parseInt(document.getElementById('pointsAmount').value) || 0;
+  const note = document.getElementById('pointsNote').value.trim();
+  if (amount === 0) { showToast('Vui lòng nhập số điểm!', 'error'); return; }
+  const newPts = DB.addPoints(currentStudentForPoints, amount, teacher.id, teacher.name, note);
+  closeModal('pointsModal');
+  const student = DB.getStudent(currentStudentForPoints);
+  showToast(`${student?.name}: ${amount >= 0 ? '+' : ''}${amount} ⭐ (Tổng: ${newPts})`, 'success');
+  // Refresh current page
+  const activePage = document.querySelector('.page-view:not([style*="display: none"])');
+  if (document.getElementById('page-dashboard').style.display !== 'none') renderDashboard();
+  if (document.getElementById('page-students').style.display !== 'none') renderStudentsTable();
+  if (document.getElementById('page-points').style.display !== 'none') filterStudentsForPoints();
+  if (document.getElementById('page-classes').style.display !== 'none') renderClasses();
+}
+
+function confirmDelete(msg, callback) {
+  document.getElementById('deleteModalMsg').innerHTML = msg;
+  deleteCallback = callback;
+  document.getElementById('deleteConfirmBtn').onclick = () => { callback(); closeModal('deleteModal'); };
+  openModal('deleteModal');
+}
+
+function deleteClass(classId) {
+  DB.removeClass(classId);
+  showToast('Đã xóa lớp! 🗑️', 'info');
+  renderClasses();
+  renderDashboard();
+}
+
+function deleteStudent(studentId, classId) {
+  DB.removeStudent(studentId);
+  showToast('Đã xóa học sinh! 🗑️', 'info');
+  renderStudentsTable();
+  if (classId) showClassDetail(classId);
+}
+
+// ---- TOAST ----
+function showToast(msg, type = 'info') {
+  const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.innerHTML = `<span>${icons[type]}</span> ${msg}`;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 3100);
+}
+
+// (init được gọi từ SYNC.load().then() bên trên)
+</script>
+</body>
+</html>

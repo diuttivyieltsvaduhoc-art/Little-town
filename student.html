@@ -1,0 +1,2481 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Little Town 🏘️ - Nhà của bạn</title>
+  <meta name="description" content="Little Town - Student Home">
+  <link rel="stylesheet" href="css/main.css?v=2">
+  <link rel="stylesheet" href="css/student.css?v=2">
+  <link rel="stylesheet" href="css/shop.css?v=2">
+  <style>
+    .remove-handle {
+      position: absolute;
+      top: -4px; left: -4px;
+      width: 16px; height: 16px;
+      background: #E74C3C;
+      color: white;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8px;
+      font-weight: bold;
+      opacity: 0;
+      transition: opacity 0.2s;
+      z-index: 11;
+      border: 2px solid white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    }
+    .room-furniture-item:hover .remove-handle {
+      opacity: 1;
+    }
+    .rotate-handle {
+      position: absolute;
+      top: -4px; right: -4px;
+      width: 16px; height: 16px;
+      background: #F7971E;
+      color: white;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8px;
+      font-weight: bold;
+      opacity: 0;
+      transition: opacity 0.2s;
+      z-index: 11;
+      border: 2px solid white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    }
+    .room-furniture-item:hover .rotate-handle {
+      opacity: 1;
+    }
+    .flip-handle {
+      position: absolute;
+      bottom: -4px; left: -4px;
+      width: 16px; height: 16px;
+      background: #3498DB;
+      color: white;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8px;
+      font-weight: bold;
+      opacity: 0;
+      transition: opacity 0.2s;
+      z-index: 11;
+      border: 2px solid white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    }
+    .room-furniture-item:hover .flip-handle {
+      opacity: 1;
+    }
+    .room-furniture-item {
+      position: absolute !important;
+      display: inline-block;
+      user-select: none;
+      touch-action: none;
+    }
+    .room-furniture-item.resizing, .room-furniture-item.dragging {
+      animation: none !important;
+    }
+  </style>
+</head>
+<body>
+<!-- ===== TOP NAVIGATION ===== -->
+<nav class="top-nav">
+  <div class="nav-logo">🏘️ Little Town</div>
+  <div class="nav-menu">
+    <button class="nav-btn active" id="navHome" onclick="switchView('home')">🏠 Nhà</button>
+    <button class="nav-btn" id="navStreet" onclick="switchView('street')">🏘️ Phố</button>
+    <button class="nav-btn" id="navShop" onclick="switchView('shop')">🛍️ Cửa hàng</button>
+    <button class="nav-btn" id="navGame" onclick="switchView('game')">🎮 Giải trí</button>
+  </div>
+  <div class="nav-student">
+    <div class="nav-points" id="navPoints">⭐ 0</div>
+    <div class="nav-student-name" id="navName">Loading...</div>
+    <div style="position:relative;display:inline-block;">
+      <button class="btn btn-ghost btn-sm" onclick="logout()" title="Thoát (thiết bị nhớ tài khoản, lần sau tự vào)" style="padding:6px 12px;font-size:0.78rem;">🚪</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ===== STUDENT MAIN ===== -->
+<div class="student-main">
+
+  <!-- ===================== HOME VIEW ===================== -->
+  <div class="view active home-view" id="viewHome">
+    <!-- Room Hero -->
+    <div class="home-hero">
+      <div class="room-bg bedroom">
+        <div class="room-walls"></div>
+        <div class="room-wall-pattern"></div>
+        <div class="room-floor-pattern"></div>
+
+        <!-- Window -->
+        <div class="room-window">
+          <div class="window-outside">☀️🌳</div>
+        </div>
+
+        <!-- Furniture in room -->
+        <div class="room-furniture-area" id="roomFurniture"></div>
+
+        <!-- Pet(s) -->
+        <div id="roomPets"></div>
+
+        <!-- Character -->
+        <div class="room-character" id="roomCharacter">
+          <div class="char-tooltip" id="charTooltip">Xin chào! 👋</div>
+          <!-- Character rendered here by JS -->
+        </div>
+      </div>
+
+      <!-- Room tabs -->
+      <div class="room-tabs">
+        <button class="room-tab-btn active" id="roomTabBedroom" onclick="switchRoomTab('bedroom')">🛏️ Phòng ngủ</button>
+        <button class="room-tab-btn" id="roomTabLiving" onclick="switchRoomTab('living')">🛋️ Phòng khách</button>
+        <button class="room-tab-btn" id="roomTabKitchen" onclick="switchRoomTab('kitchen')">🍳 Bếp</button>
+      </div>
+    </div>
+
+    <!-- Dashboard grid -->
+    <div class="home-grid">
+      <!-- Pet Panel -->
+      <div class="glass home-panel pet-panel">
+        <div class="panel-title">
+          <span class="panel-title-icon">🐾</span>
+          Thú Cưng của tôi
+          <span id="petCount" style="margin-left:auto;font-size:0.8rem;color:var(--text-muted);">0/3</span>
+        </div>
+        <div class="pets-container" id="petsContainer">
+          <div class="empty-state">
+            <div class="empty-state-icon">🐾</div>
+            <div class="empty-state-text">Chưa có thú cưng. Ghé cửa hàng để mua!</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Outfit Panel -->
+      <div class="glass home-panel outfit-panel">
+        <div class="panel-title">
+          <span class="panel-title-icon">👗</span>
+          Trang Phục Nhân Vật
+        </div>
+        <div class="character-display" id="outfitDisplay">
+          <div id="outfitCharPreview" style="flex-shrink:0;"></div>
+          <div class="outfit-slots" id="outfitSlots"></div>
+        </div>
+        <button class="btn btn-primary btn-sm btn-block" onclick="openOutfitModal()">
+          ✨ Thay đồ
+        </button>
+      </div>
+    </div>
+
+    <!-- Inventory Panel -->
+    <div class="glass home-panel inventory-panel" style="margin-bottom:20px;">
+      <div class="panel-title" style="margin-bottom:8px;">
+        <span class="panel-title-icon">🎒</span>
+        Ba Lô của tôi
+        <button class="btn btn-warm btn-sm" style="margin-left:auto;" onclick="switchView('shop')">🛍️ Mua thêm</button>
+      </div>
+      <!-- Inventory Categorized Tabs -->
+      <div class="tab-nav" id="inventoryTabs" style="margin-bottom:12px; gap:4px; padding:4px; background: rgba(255,255,255,0.02); border-radius:8px; display:flex; flex-wrap:wrap;">
+        <button class="tab-btn active" data-tab="all" onclick="switchInventoryTab('all')" style="padding: 6px 10px; font-size: 0.75rem; flex:1;">🎒 Tất cả</button>
+        <button class="tab-btn" data-tab="furniture" onclick="switchInventoryTab('furniture')" style="padding: 6px 10px; font-size: 0.75rem; flex:1;">🛋️ Nội thất</button>
+        <button class="tab-btn" data-tab="food" onclick="switchInventoryTab('food')" style="padding: 6px 10px; font-size: 0.75rem; flex:1;">🍖 Đồ ăn</button>
+        <button class="tab-btn" data-tab="clothes" onclick="switchInventoryTab('clothes')" style="padding: 6px 10px; font-size: 0.75rem; flex:1;">👕 Trang phục</button>
+      </div>
+      <div class="inventory-grid" id="inventoryGrid">
+        <div class="empty-state" style="grid-column:1/-1;">
+          <div class="empty-state-text">Túi đồ trống. Mua vật phẩm từ cửa hàng!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== STREET VIEW ===================== -->
+  <div class="view" id="viewStreet">
+    <div class="street-view">
+      <!-- Sky -->
+      <div class="street-sky"></div>
+      <div class="street-sun"></div>
+
+      <!-- Birds -->
+      <div class="street-bird" style="top:12%;--speed:18s;--delay:0s;">🐦</div>
+      <div class="street-bird" style="top:18%;--speed:22s;--delay:-7s;">🐦</div>
+      <div class="street-bird" style="top:8%;--speed:15s;--delay:-3s;">🐦</div>
+
+      <!-- Clouds -->
+      <div style="position:absolute;top:10%;font-size:3rem;animation:cloudMove 20s linear infinite;opacity:0.3;">☁️</div>
+      <div style="position:absolute;top:22%;font-size:2rem;animation:cloudMove 28s linear infinite;animation-delay:-10s;opacity:0.2;">☁️</div>
+      <div style="position:absolute;top:5%;font-size:4rem;animation:cloudMove 25s linear infinite;animation-delay:-5s;opacity:0.15;">☁️</div>
+
+      <!-- Trees & Lamps -->
+      <div class="street-tree" style="left:5%;--delay:0s;">🌳</div>
+      <div class="street-tree" style="left:25%;--delay:0.5s;">🌲</div>
+      <div class="street-tree" style="left:65%;--delay:1s;">🌳</div>
+      <div class="street-tree" style="left:88%;--delay:0.3s;">🌲</div>
+
+      <!-- Lampposts -->
+      <div class="street-lamp" style="left:15%;"><div class="lamp-pole"></div><div class="lamp-base"></div></div>
+      <div class="street-lamp" style="left:45%;"><div class="lamp-pole"></div><div class="lamp-base"></div></div>
+      <div class="street-lamp" style="left:75%;"><div class="lamp-pole"></div><div class="lamp-base"></div></div>
+
+      <!-- Houses Row -->
+      <div class="houses-row" id="housesRow"></div>
+
+      <!-- Walking character on street -->
+      <div class="street-character" id="streetWalkChar"></div>
+
+      <!-- Ground elements -->
+      <div class="street-grass"></div>
+      <div class="street-sidewalk"></div>
+      <div class="street-road"></div>
+
+      <!-- Street sign -->
+      <div style="position:absolute;bottom:160px;left:50%;transform:translateX(-50%);z-index:20;text-align:center;pointer-events:none;">
+        <div style="background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border: 2px solid var(--accent); color: #FFFFFF; padding: 8px 24px; border-radius: 30px; font-size: 1.1rem; font-weight: 800; font-family: var(--font-title); box-shadow: 0 4px 15px rgba(0,0,0,0.3); text-shadow: 0 1px 2px rgba(0,0,0,0.4); display: inline-flex; align-items: center; gap: 8px;" id="streetClassName">🏘️ Con Phố của Lớp</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== SHOP VIEW ===================== -->
+  <div class="view" id="viewShop">
+    <div class="shop-view">
+      <div class="section-header">
+        <div class="section-title">🛍️ <span>Khu Mua Sắm</span></div>
+        <div class="points-badge">
+          <span class="star">⭐</span>
+          <span id="shopPoints">0</span> điểm
+        </div>
+      </div>
+
+      <!-- Shop Selector -->
+      <div class="shop-selector">
+        <div class="shop-selector-card active" id="shopCard-pets" onclick="selectShop('pets')">
+          <div class="shop-selector-icon">🐾</div>
+          <div class="shop-selector-name">Thú Cưng</div>
+          <div class="shop-selector-count">10 loại</div>
+        </div>
+        <div class="shop-selector-card" id="shopCard-food" onclick="selectShop('food')">
+          <div class="shop-selector-icon">🍖</div>
+          <div class="shop-selector-name">Đồ Ăn</div>
+          <div class="shop-selector-count">15 loại</div>
+        </div>
+        <div class="shop-selector-card" id="shopCard-clothes" onclick="selectShop('clothes')">
+          <div class="shop-selector-icon">👗</div>
+          <div class="shop-selector-name">Quần Áo</div>
+          <div class="shop-selector-count">50 loại</div>
+        </div>
+        <div class="shop-selector-card" id="shopCard-accessories" onclick="selectShop('accessories')">
+          <div class="shop-selector-icon">💍</div>
+          <div class="shop-selector-name">Phụ Kiện</div>
+          <div class="shop-selector-count">20 loại</div>
+        </div>
+        <div class="shop-selector-card" id="shopCard-furniture" onclick="selectShop('furniture')">
+          <div class="shop-selector-icon">🛋️</div>
+          <div class="shop-selector-name">Nội Thất</div>
+          <div class="shop-selector-count">20 loại</div>
+        </div>
+        <div class="shop-selector-card" id="shopCard-decor" onclick="selectShop('decor')">
+          <div class="shop-selector-icon">🌸</div>
+          <div class="shop-selector-name">Trang Trí</div>
+          <div class="shop-selector-count">15 loại</div>
+        </div>
+      </div>
+
+      <!-- Shop Content -->
+      <div class="shop-content-area glass">
+        <div class="shop-header">
+          <span class="shop-header-icon" id="currentShopIcon">🐾</span>
+          <div>
+            <div class="shop-header-name" id="currentShopName">Cửa Hàng Thú Cưng</div>
+            <div class="shop-header-desc" id="currentShopDesc">Chọn bạn đồng hành lý tưởng</div>
+          </div>
+          <div class="shop-filter" id="shopFilterArea"></div>
+        </div>
+        <div class="shop-items-grid">
+          <div class="shop-grid" id="shopItemsGrid"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== GAME VIEW ===================== -->
+  <div class="view" id="viewGame">
+    <div class="game-view-container">
+      <div class="section-header">
+        <div class="section-title">🎮 <span>Hành Trình Tri Thức</span></div>
+        <div class="game-lives-container">
+          <div class="game-lives-badge" id="gameLivesDisplay">❤️ 3/3</div>
+          <div class="game-timer-badge" id="gameRegenTimer" style="display: none;">Hồi phục: 15:00</div>
+          <button class="btn btn-sm btn-warning" onclick="buyGameLife()">Mua lượt (+1 ❤️): 10 ⭐</button>
+        </div>
+      </div>
+
+      <div class="game-layout">
+        <!-- Left: Level list -->
+        <div class="game-levels-panel glass">
+          <h3>Màn Chơi</h3>
+          <div class="levels-list" id="gameLevelsList">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Right: Board or Level start preview -->
+        <div class="game-board-panel glass">
+          <div id="gameStartScreen" class="game-screen">
+            <!-- Level info preview before start -->
+            <div class="level-intro">
+              <h2 id="introLevelTitle">Màn 1</h2>
+              <p id="introLevelDesc">Xếp các đồ dùng giống nhau để ghi điểm học tập!</p>
+              <div class="level-target-card">
+                <div>Mục tiêu: <strong id="introLevelTarget">1000</strong> điểm</div>
+                <div>Giới hạn: <strong id="introLevelMoves">30</strong> lượt đi</div>
+              </div>
+              <button class="btn btn-lg btn-primary" id="btnStartGame" onclick="startGamePlay()">Bắt đầu học tập 🎒</button>
+            </div>
+          </div>
+
+          <div id="gamePlayScreen" class="game-screen" style="display: none;">
+            <div class="game-hud">
+              <div class="hud-item">
+                <span class="hud-label">Điểm</span>
+                <span class="hud-val" id="hudScore">0 / 1000</span>
+              </div>
+              <div class="hud-item">
+                <span class="hud-label">Lượt đi</span>
+                <span class="hud-val" id="hudMoves">30</span>
+              </div>
+              <button class="btn btn-sm btn-ghost" onclick="exitGamePlay()">🏳️ Đầu hàng</button>
+            </div>
+            
+            <div class="game-grid-container">
+              <div id="match3Board" class="match3-board">
+                <!-- Rendered dynamically by JS -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /student-main -->
+
+<!-- ===================== SETUP OVERLAY ===================== -->
+<div class="setup-overlay" id="setupOverlay" style="display:none;">
+  <div class="glass setup-card">
+    <div style="text-align:center;margin-bottom:4px;font-size:2.5rem;">🏘️</div>
+
+    <div class="setup-progress" id="setupProgress">
+      <div class="setup-progress-dot active" id="setupDot0"></div>
+      <div class="setup-progress-dot" id="setupDot1"></div>
+      <div class="setup-progress-dot" id="setupDot2"></div>
+      <div class="setup-progress-dot" id="setupDot3"></div>
+    </div>
+
+    <!-- Step 0: Welcome -->
+    <div class="setup-step active" id="setupStep0">
+      <div class="setup-title">Chào mừng đến Little Town! 🎉</div>
+      <div class="setup-desc">Hãy cùng thiết lập nhân vật của bạn trước nhé. Chỉ mất vài phút thôi!</div>
+      <div style="text-align:center;padding:20px 0;">
+        <div style="font-size:4rem;animation:bounce 2s ease-in-out infinite;">🏘️</div>
+        <div style="margin-top:12px;color:var(--text-muted);font-size:0.88rem;">Con phố xinh đẹp đang chờ bạn khám phá...</div>
+      </div>
+      <button class="btn btn-primary btn-block btn-lg" onclick="nextSetupStep()">Bắt đầu thôi! 🚀</button>
+    </div>
+
+    <!-- Step 1: Gender -->
+    <div class="setup-step" id="setupStep1">
+      <div class="setup-title">Bạn là ai? 👤</div>
+      <div class="setup-desc">Chọn giới tính cho nhân vật của bạn</div>
+      <div class="gender-cards">
+        <div class="gender-card" id="genderMale" onclick="selectGender('male')">
+          <div class="gender-icon">👦</div>
+          <div class="gender-label">Bạn Nam</div>
+        </div>
+        <div class="gender-card" id="genderFemale" onclick="selectGender('female')">
+          <div class="gender-icon">👧</div>
+          <div class="gender-label">Bạn Nữ</div>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:8px;">
+        <button class="btn btn-ghost btn-sm" onclick="prevSetupStep()">← Quay lại</button>
+      </div>
+    </div>
+
+    <!-- Step 2: Character Style -->
+    <div class="setup-step" id="setupStep2">
+      <div class="setup-title">Chọn kiểu nhân vật ✨</div>
+      <div class="setup-desc">Chọn kiểu dáng nhân vật bạn thích</div>
+      <div class="style-grid" id="styleGrid"></div>
+      <div style="text-align:center;margin-top:16px;">
+        <button class="btn btn-ghost btn-sm" onclick="prevSetupStep()">← Quay lại</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Pet -->
+    <div class="setup-step" id="setupStep3">
+      <div class="setup-title">Chọn thú cưng đầu tiên 🐾</div>
+      <div class="setup-desc">Người bạn đồng hành đặc biệt của bạn!</div>
+      <div class="pet-type-tabs">
+        <button class="pet-type-btn active" id="petTypedog" onclick="filterSetupPets('dog')">🐕 Chó</button>
+        <button class="pet-type-btn" id="petTypecat" onclick="filterSetupPets('cat')">🐈 Mèo</button>
+      </div>
+      <div class="pet-grid" id="petGrid"></div>
+      <div style="text-align:center;margin-top:16px;">
+        <button class="btn btn-ghost btn-sm" onclick="prevSetupStep()">← Quay lại</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODALS ===================== -->
+
+<!-- Outfit Modal -->
+<div class="modal-overlay" id="outfitModal">
+  <div class="modal glass" style="max-width:700px;">
+    <div class="modal-header">
+      <div class="modal-title">👗 Thay Đồ Cho Nhân Vật</div>
+      <button class="btn btn-ghost btn-sm btn-icon" onclick="closeModal('outfitModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:grid;grid-template-columns:140px 1fr;gap:20px;">
+        <!-- Character preview -->
+        <div style="text-align:center;">
+          <div id="outfitPreviewChar" style="margin-bottom:12px;"></div>
+          <div style="font-size:0.8rem;color:var(--text-muted);">Xem trước</div>
+          <div style="margin-top:8px;font-size:0.78rem;color:var(--text-muted);">Đang mặc:</div>
+          <div id="outfitCurrentList" style="margin-top:4px;font-size:0.75rem;color:var(--text-white);"></div>
+        </div>
+        <!-- Slot tabs and items -->
+        <div>
+          <div class="tab-nav" id="outfitSlotTabs" style="margin-bottom:16px;flex-wrap:wrap;"></div>
+          <div id="outfitSlotItems" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;max-height:350px;overflow-y:auto;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('outfitModal')">Đóng</button>
+      <button class="btn btn-accent" onclick="saveOutfit()">✅ Lưu trang phục</button>
+    </div>
+  </div>
+</div>
+
+<!-- Feed Pet Modal -->
+<div class="modal-overlay" id="feedModal">
+  <div class="modal glass" style="max-width:500px;">
+    <div class="modal-header">
+      <div class="modal-title" id="feedModalTitle">🍖 Cho Thú Cưng Ăn</div>
+      <button class="btn btn-ghost btn-sm btn-icon" onclick="closeModal('feedModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="feedPetStats" style="margin-bottom:16px;"></div>
+      <div style="font-weight:700;margin-bottom:12px;font-size:0.9rem;">Chọn vật phẩm từ ba lô:</div>
+      <div id="feedInventory" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px;max-height:250px;overflow-y:auto;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('feedModal')">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<!-- Visit House Modal -->
+<div class="visit-overlay" id="visitOverlay">
+  <div class="glass visit-card" style="max-width:700px;max-height:90vh;overflow-y:auto;">
+    <div class="visit-header">
+      <div>
+        <div style="font-weight:800;font-size:1.1rem;" id="visitStudentName">-</div>
+        <div style="font-size:0.8rem;color:var(--text-muted);" id="visitClassLabel">-</div>
+      </div>
+      <button class="btn btn-ghost btn-sm btn-icon" onclick="closeVisit()">✕</button>
+    </div>
+    <div style="padding:24px;" id="visitContent"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast-container"></div>
+
+<script src="js/data.js"></script>
+<script src="js/sync.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/ui.js"></script>
+<script>
+// ============================================
+// LITTLE TOWN - STUDENT.JS (inline)
+// ============================================
+
+// ---- Apply saved theme ----
+(function() {
+  const t = localStorage.getItem('lt_theme') || 'dark';
+  if (t === 'light') document.body.classList.add('light-mode');
+})();
+
+AUTH.initDefaultData();
+let currentStudent = AUTH.getCurrentStudent();
+
+// ---- Boot: load từ server rồi init (có guard tránh double-init) ----
+let _studentInited = false;
+async function _startStudent() {
+  if (_studentInited) return;
+  _studentInited = true;
+
+  // Thử lấy session hiện tại
+  currentStudent = AUTH.getCurrentStudent();
+
+  // Nếu không có session → thử auto-login bằng device ID đã lưu
+  if (!currentStudent) {
+    const deviceId = AUTH.getDeviceStudentId();
+    if (deviceId) {
+      const result = AUTH.studentLogin(deviceId);
+      if (result.success) {
+        currentStudent = result.student;
+      }
+    }
+  }
+
+  if (!currentStudent) {
+    // Không có tài khoản → về trang đăng nhập
+    window.location.href = 'index.html';
+    return;
+  }
+  init();
+}
+SYNC.load().then(_startStudent);
+
+// ---- SETUP STATE ----
+let setupState = { gender: null, style: null, pet: null, petName: null, currentStep: 0 };
+let currentOutfitDraft = {};
+let currentOutfitSlot = 'top';
+let feedingPetIndex = 0;
+let currentInventoryTab = 'all';
+
+// ---- INIT ----
+function init() {
+  currentStudent = AUTH.getCurrentStudent();
+  updateNavInfo();
+  applyTheme();
+
+  if (!currentStudent.setupDone) {
+    showSetupOverlay();
+  } else {
+    renderHome();
+    renderStreet();
+    renderShop('pets');
+  }
+  PET_DECAY.startDecay();
+  startPolling();
+  if (currentStudent && currentStudent.setupDone) {
+    if (currentStudent.gameLevel === undefined) currentStudent.gameLevel = 1;
+    if (currentStudent.gameLives === undefined) currentStudent.gameLives = 3;
+    if (currentStudent.lastLifeLostTime === undefined) currentStudent.lastLifeLostTime = null;
+    updateGameLivesRegen();
+  }
+}
+
+function startPolling() {
+  setInterval(async () => {
+    const dataChanged = await SYNC.load();
+    if (dataChanged) {
+      console.log('Dữ liệu mạng nội bộ đã được đồng bộ!');
+      currentStudent = AUTH.getCurrentStudent();
+      applyTheme();
+      if (currentStudent) {
+        updateNavInfo();
+        if (currentStudent.setupDone) {
+          renderRoomCharacter();
+          renderRoomPets();
+          renderRoomFurniture();
+          renderPetsPanel();
+          renderOutfitPanel();
+          renderInventory();
+          renderStreet();
+        }
+      }
+    }
+  }, 8000);
+}
+
+function applyTheme() {
+  const t = localStorage.getItem('lt_theme') || 'dark';
+  if (t === 'light') {
+    document.body.classList.add('light-mode');
+  } else {
+    document.body.classList.remove('light-mode');
+  }
+}
+
+function updateNavInfo() {
+  document.getElementById('navName').textContent = currentStudent.name;
+  document.getElementById('navPoints').textContent = '⭐ ' + (currentStudent.points || 0);
+  document.getElementById('shopPoints').textContent = currentStudent.points || 0;
+}
+
+// ---- VIEW SWITCHING ----
+function switchView(viewName) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('view' + viewName.charAt(0).toUpperCase() + viewName.slice(1)).classList.add('active');
+  document.getElementById('nav' + viewName.charAt(0).toUpperCase() + viewName.slice(1)).classList.add('active');
+
+  if (viewName === 'home') renderHome();
+  if (viewName === 'street') renderStreet();
+  if (viewName === 'shop') { renderShop(currentShop); updateNavInfo(); }
+  if (viewName === 'game') initGameView();
+}
+
+// ============================================
+// HOME VIEW
+// ============================================
+let currentRoom = 'bedroom';
+
+function renderHome() {
+  currentStudent = AUTH.getCurrentStudent();
+  updateNavInfo();
+  renderRoomCharacter();
+  renderRoomPets();
+  renderRoomFurniture();
+  renderPetsPanel();
+  renderOutfitPanel();
+  renderInventory();
+}
+
+function renderRoomCharacter() {
+  const charEl = document.getElementById('roomCharacter');
+  if (!currentStudent.characterStyle || !currentStudent.gender) {
+    charEl.innerHTML = `
+      <div class="char-tooltip" id="charTooltip">Xin chào! 👋</div>
+      <div style="font-size:3rem;animation:charBob 0.6s ease-in-out infinite alternate;">🧒</div>`;
+    return;
+  }
+  charEl.innerHTML = `
+    <div class="char-tooltip" id="charTooltip">Xin chào, ${currentStudent.name}! 👋</div>
+    ${UI.renderCharacter(currentStudent.gender, currentStudent.characterStyle, currentStudent.outfit, 100, true)}
+  `;
+
+  if (typeof startRoomRoaming === 'function') {
+    startRoomRoaming();
+  }
+}
+
+function renderRoomPets() {
+  const petsEl = document.getElementById('roomPets');
+  const pets = currentStudent.pets || [];
+  const positions = ['room-pet room-pet-1', 'room-pet room-pet-2', 'room-pet room-pet-3'];
+  petsEl.innerHTML = pets.slice(0, 3).map((pet, i) => `
+    <div class="${positions[i]}" id="room_pet_${i}">
+      ${UI.renderPet(pet, 70, true)}
+    </div>
+  `).join('');
+
+  if (typeof startRoomRoaming === 'function') {
+    startRoomRoaming();
+  }
+}
+
+function getFurnitureZIndex(item, allItems) {
+  const bottom = item.bottom || 10;
+  return Math.round(150 - bottom);
+}
+
+function rotatePlacedFurniture(instId) {
+  const placed = [...(currentStudent.placedFurniture || [])];
+  const idx = placed.findIndex(item => item.id === instId);
+  if (idx !== -1) {
+    placed[idx].rotation = ((placed[idx].rotation || 0) + 90) % 360;
+    DB.updateStudent(currentStudent.id, { placedFurniture: placed });
+    currentStudent = AUTH.getCurrentStudent();
+    renderRoomFurniture();
+    showToast('Đã xoay vật phẩm 🔄', 'info');
+  }
+}
+
+function flipPlacedFurniture(instId) {
+  const placed = [...(currentStudent.placedFurniture || [])];
+  const idx = placed.findIndex(item => item.id === instId);
+  if (idx !== -1) {
+    placed[idx].flipX = !placed[idx].flipX;
+    DB.updateStudent(currentStudent.id, { placedFurniture: placed });
+    currentStudent = AUTH.getCurrentStudent();
+    renderRoomFurniture();
+    showToast('Đã lật đối xứng vật phẩm ↔️', 'info');
+  }
+}
+
+function renderRoomFurniture() {
+  const placed = currentStudent.placedFurniture || [];
+  const currentRoomItems = placed.filter(item => item.room === currentRoom);
+  const furEl = document.getElementById('roomFurniture');
+  
+  if (currentRoomItems.length === 0) {
+    furEl.innerHTML = `
+      <div class="empty-state-hint" style="position:absolute; bottom:12px; left:50%; transform:translateX(-50%); font-size:0.78rem; color:rgba(255,255,255,0.4); pointer-events:none; white-space:nowrap;">
+        Trống. Mở ba lô và chọn đồ để đặt vào phòng!
+      </div>`;
+    return;
+  }
+  
+  furEl.innerHTML = currentRoomItems.map((item) => {
+    const dbItem = GAME_DATA.shops.furniture.items.find(f => f.id === item.itemId) ||
+                   GAME_DATA.shops.decor.items.find(d => d.id === item.itemId);
+    if (!dbItem) return '';
+    const size = item.scale || 2.2;
+    const left = item.left || 50;
+    const bottom = item.bottom || 10;
+    
+    // Get actual dimensions and convert to em
+    const dims = UI.ITEM_DIMENSIONS[item.itemId] || { w: 50, h: 50 };
+    const wEm = (dims.w / 35).toFixed(2) + "em";
+    const hEm = (dims.h / 35).toFixed(2) + "em";
+    const svgHtml = UI.renderFurnitureSVG(item.itemId, wEm, hEm);
+    
+    const zIndex = getFurnitureZIndex(item, currentRoomItems);
+    
+    return `
+    <div class="room-furniture-item" id="fur_${item.id}"
+         style="font-size:${size}em; left:${left}%; bottom:${bottom}px; position:absolute; z-index:${zIndex};"
+         title="${dbItem.nameVi} — Kéo để di chuyển, kéo góc để phóng to/thu nhỏ"
+         onmousedown="startFurnitureDrag(event, '${item.id}')"
+         ontouchstart="startFurnitureDrag(event, '${item.id}')">
+      <div style="transform: rotate(${item.rotation || 0}deg) scaleX(${item.flipX ? -1 : 1}); transition: transform 0.2s; display: flex; justify-content: center; align-items: center;">
+        ${svgHtml}
+      </div>
+      <div class="resize-size-label">${size.toFixed(1)}x</div>
+      <div class="resize-handle" onmousedown="startFurnitureResize(event,'${item.id}')" ontouchstart="startFurnitureResize(event,'${item.id}')"></div>
+      <div class="remove-handle" onmousedown="event.stopPropagation(); removePlacedFurniture('${item.id}')" ontouchstart="event.stopPropagation(); removePlacedFurniture('${item.id}')" title="Thu hồi về ba lô">✕</div>
+      <div class="rotate-handle" onmousedown="event.stopPropagation(); rotatePlacedFurniture('${item.id}')" ontouchstart="event.stopPropagation(); rotatePlacedFurniture('${item.id}')" title="Xoay 90°">🔄</div>
+      <div class="flip-handle" onmousedown="event.stopPropagation(); flipPlacedFurniture('${item.id}')" ontouchstart="event.stopPropagation(); flipPlacedFurniture('${item.id}')" title="Lật đối xứng">↔️</div>
+    </div>`;
+  }).join('');
+}
+
+// ---- 2D ROAMING LOGIC ----
+let roamingEntities = [];
+let roamingInterval = null;
+
+function startRoomRoaming() {
+  const prevCoords = {};
+  roamingEntities.forEach(ent => {
+    if (ent.id) prevCoords[ent.id] = { x: ent.x, y: ent.y, tx: ent.tx, ty: ent.ty };
+  });
+
+  roamingEntities = [];
+
+  const charEl = document.getElementById('roomCharacter');
+  if (charEl) {
+    charEl.style.animation = 'none';
+    const prev = prevCoords['char'];
+    roamingEntities.push({
+      id: 'char',
+      el: charEl,
+      x: prev ? prev.x : 50,
+      y: prev ? prev.y : 20,
+      tx: prev ? prev.tx : 50,
+      ty: prev ? prev.ty : 20,
+      speed: 0.15,
+      isChar: true
+    });
+  }
+
+  const pets = currentStudent.pets || [];
+  pets.slice(0, 3).forEach((pet, i) => {
+    const petEl = document.getElementById(`room_pet_${i}`);
+    if (petEl) {
+      petEl.style.animation = 'none';
+      const prev = prevCoords[`pet_${i}`];
+      
+      const stats = pet.stats || { hunger: 100, happiness: 100, cleanliness: 100, energy: 100 };
+      const hunger = stats.hunger !== undefined ? stats.hunger : 100;
+      const energy = stats.energy !== undefined ? stats.energy : 100;
+      
+      const isSleeping = energy < 15;
+      const isSlow = (hunger < 35) || (energy < 35);
+      
+      let speed = 0.1 + Math.random() * 0.1;
+      if (isSleeping) {
+        speed = 0;
+      } else if (isSlow) {
+        speed = 0.03;
+      }
+      
+      // Determine initial coordinates if sleeping and there's a pet bed
+      let x = prev ? prev.x : (20 + i * 25);
+      let y = prev ? prev.y : 15;
+      
+      if (isSleeping) {
+        const placed = currentStudent.placedFurniture || [];
+        const petBed = placed.find(item => item.itemId === 'fur_pet_bed' && item.room === currentRoom);
+        if (petBed) {
+          x = petBed.left;
+          y = petBed.bottom + 6;
+        } else {
+          x = 80;
+          y = 10;
+        }
+      }
+      
+      roamingEntities.push({
+        id: `pet_${i}`,
+        el: petEl,
+        x: x,
+        y: y,
+        tx: x,
+        ty: y,
+        speed: speed,
+        isChar: false,
+        petIndex: i,
+        petId: pet.id
+      });
+    }
+  });
+
+  if (roamingInterval) clearInterval(roamingInterval);
+  roamingInterval = setInterval(() => {
+    roamingEntities.forEach(ent => {
+      // Fetch latest stats for this pet dynamically
+      let isSleeping = false;
+      let isSlow = false;
+      let targetPetBed = null;
+      
+      if (!ent.isChar) {
+        const petObj = (currentStudent.pets || [])[ent.petIndex];
+        if (petObj) {
+          const stats = petObj.stats || { hunger: 100, happiness: 100, cleanliness: 100, energy: 100 };
+          const hunger = stats.hunger !== undefined ? stats.hunger : 100;
+          const energy = stats.energy !== undefined ? stats.energy : 100;
+          
+          isSleeping = energy < 15;
+          isSlow = (hunger < 35) || (energy < 35);
+          
+          if (isSleeping) {
+            ent.speed = 0;
+            // Look for pet bed
+            const placed = currentStudent.placedFurniture || [];
+            targetPetBed = placed.find(item => item.itemId === 'fur_pet_bed' && item.room === currentRoom);
+          } else if (isSlow) {
+            ent.speed = 0.03;
+          } else {
+            // Restore speed
+            if (ent.speed === 0 || ent.speed === 0.03) {
+              ent.speed = 0.1 + Math.random() * 0.1;
+            }
+          }
+        }
+      }
+
+      if (isSleeping) {
+        if (targetPetBed) {
+          ent.tx = targetPetBed.left;
+          ent.ty = targetPetBed.bottom + 6;
+        } else {
+          ent.tx = 80;
+          ent.ty = 10;
+        }
+        ent.x = ent.tx;
+        ent.y = ent.ty;
+        
+        ent.el.style.left = ent.x + '%';
+        ent.el.style.bottom = ent.y + 'px';
+        ent.el.style.zIndex = Math.round(150 - ent.y);
+        ent.el.style.transform = `scaleX(1)`;
+        return;
+      }
+
+      const dx = ent.tx - ent.x;
+      const dy = ent.ty - ent.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist < 2) {
+        ent.tx = 10 + Math.random() * 80;
+        ent.ty = 5 + Math.random() * 75;
+        if (Math.random() < 0.25) {
+          ent.tx = ent.x;
+          ent.ty = ent.y;
+        }
+      } else {
+        const angle = Math.atan2(ent.ty - ent.y, ent.tx - ent.x);
+        ent.x += Math.cos(angle) * ent.speed;
+        ent.y += Math.sin(angle) * ent.speed;
+
+        ent.el.style.left = ent.x + '%';
+        ent.el.style.bottom = ent.y + 'px';
+        ent.el.style.zIndex = Math.round(150 - ent.y);
+
+        const isRight = Math.cos(angle) >= 0;
+        if (ent.isChar) {
+          ent.el.style.transform = `translateX(-50%) scaleX(${isRight ? 1 : -1})`;
+        } else {
+          ent.el.style.transform = `scaleX(${isRight ? 1 : -1})`;
+        }
+      }
+    });
+  }, 30);
+}
+
+// ---- FURNITURE DRAG, RESIZE, REMOVE LOGIC ----
+function startFurnitureDrag(e, instId) {
+  if (e.target.classList.contains('resize-handle') || 
+      e.target.classList.contains('remove-handle') ||
+      e.target.classList.contains('rotate-handle') ||
+      e.target.classList.contains('flip-handle')) {
+    return;
+  }
+  e.preventDefault();
+  
+  const isTouch = e.type.startsWith('touch');
+  const clientX = isTouch ? e.touches[0].clientX : e.clientX;
+  const clientY = isTouch ? e.touches[0].clientY : e.clientY;
+
+  const el = document.getElementById('fur_' + instId);
+  if (!el) return;
+  el.classList.add('dragging');
+
+  const parent = el.parentElement;
+  const parentRect = parent.getBoundingClientRect();
+
+  const startX = clientX;
+  const startY = clientY;
+
+  const startLeftPct = parseFloat(el.style.left) || 50;
+  const startBottomPx = parseFloat(el.style.bottom) || 10;
+
+  function onMove(ev) {
+    const curX = ev.type.startsWith('touch') ? ev.touches[0].clientX : ev.clientX;
+    const curY = ev.type.startsWith('touch') ? ev.touches[0].clientY : ev.clientY;
+
+    const dx = curX - startX;
+    const dy = curY - startY;
+
+    const dLeftPct = (dx / parentRect.width) * 100;
+    const dBottomPx = -dy;
+
+    let newLeft = startLeftPct + dLeftPct;
+    let newBottom = startBottomPx + dBottomPx;
+
+    newLeft = Math.max(0, Math.min(95, newLeft));
+    newBottom = Math.max(0, Math.min(140, newBottom));
+
+    el.style.left = newLeft.toFixed(1) + '%';
+    el.style.bottom = newBottom.toFixed(0) + 'px';
+    
+    // Preview standard z-index during drag (actual z-index will re-evaluate on up)
+    el.style.zIndex = Math.round(150 - newBottom);
+  }
+
+  function onUp() {
+    el.classList.remove('dragging');
+    if (isTouch) {
+      document.removeEventListener('touchmove', onMove);
+      document.removeEventListener('touchend', onUp);
+    } else {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    }
+
+    const finalLeft = parseFloat(el.style.left);
+    const finalBottom = parseFloat(el.style.bottom);
+
+    const placed = [...(currentStudent.placedFurniture || [])];
+    const idx = placed.findIndex(item => item.id === instId);
+    if (idx !== -1) {
+      placed[idx].left = +finalLeft.toFixed(1);
+      placed[idx].bottom = +finalBottom.toFixed(0);
+      DB.updateStudent(currentStudent.id, { placedFurniture: placed });
+      currentStudent = AUTH.getCurrentStudent();
+      renderRoomFurniture();
+    }
+  }
+
+  if (isTouch) {
+    document.addEventListener('touchmove', onMove, { passive: false });
+    document.addEventListener('touchend', onUp);
+  } else {
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }
+}
+
+function startFurnitureResize(e, instId) {
+  e.preventDefault();
+  e.stopPropagation();
+  
+  const isTouch = e.type.startsWith('touch');
+  const startX = isTouch ? e.touches[0].clientX : e.clientX;
+  
+  const el = document.getElementById('fur_' + instId);
+  if (!el) return;
+  
+  const startFontSize = parseFloat(el.style.fontSize) || 2.2;
+  el.classList.add('resizing');
+
+  function onMove(ev) {
+    const curX = ev.type.startsWith('touch') ? ev.touches[0].clientX : ev.clientX;
+    const dx = curX - startX;
+    const newSize = Math.min(5.0, Math.max(0.8, startFontSize + dx * 0.025));
+    el.style.fontSize = newSize.toFixed(2) + 'em';
+    const label = el.querySelector('.resize-size-label');
+    if (label) label.textContent = newSize.toFixed(1) + 'x';
+  }
+  
+  function onUp() {
+    const newSize = parseFloat(el.style.fontSize);
+    el.classList.remove('resizing');
+    
+    if (isTouch) {
+      document.removeEventListener('touchmove', onMove);
+      document.removeEventListener('touchend', onUp);
+    } else {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    }
+    
+    const placed = [...(currentStudent.placedFurniture || [])];
+    const idx = placed.findIndex(item => item.id === instId);
+    if (idx !== -1) {
+      placed[idx].scale = +newSize.toFixed(2);
+      DB.updateStudent(currentStudent.id, { placedFurniture: placed });
+      currentStudent = AUTH.getCurrentStudent();
+      showToast('Đã lưu kích cỡ ' + newSize.toFixed(1) + 'x ✅', 'info');
+    }
+  }
+
+  if (isTouch) {
+    document.addEventListener('touchmove', onMove, { passive: false });
+    document.addEventListener('touchend', onUp);
+  } else {
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }
+}
+
+function removePlacedFurniture(instId) {
+  const placed = [...(currentStudent.placedFurniture || [])];
+  const idx = placed.findIndex(item => item.id === instId);
+  if (idx !== -1) {
+    placed.splice(idx, 1);
+    DB.updateStudent(currentStudent.id, { placedFurniture: placed });
+    currentStudent = AUTH.getCurrentStudent();
+    renderRoomFurniture();
+    showToast('Đã thu hồi vật phẩm về ba lô 📦', 'info');
+  }
+}
+
+function switchRoomTab(room) {
+  currentRoom = room;
+  document.querySelectorAll('.room-tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('roomTab' + room.charAt(0).toUpperCase() + room.slice(1)).classList.add('active');
+  
+  // Cập nhật giao diện hình ảnh nền và sàn của phòng
+  const roomBg = document.querySelector('.home-hero .room-bg');
+  if (roomBg) {
+    roomBg.className = 'room-bg ' + room;
+  }
+  
+  renderRoomFurniture();
+}
+
+// ---- PET PANEL ----
+function renderPetsPanel() {
+  const pets = currentStudent.pets || [];
+  const container = document.getElementById('petsContainer');
+  document.getElementById('petCount').textContent = pets.length + '/3';
+
+  if (pets.length === 0) {
+    container.innerHTML = `<div class="empty-state">
+      <div class="empty-state-icon">🐾</div>
+      <div class="empty-state-text">Chưa có thú cưng. Ghé cửa hàng để mua!</div>
+      <button class="btn btn-primary btn-sm mt-12" onclick="switchView('shop')">🛍️ Mua ngay</button>
+    </div>`;
+    return;
+  }
+
+  container.innerHTML = pets.map((pet, i) => `
+    <div class="pet-card" id="petCard${i}">
+      <div class="pet-card-header">
+        <div style="position:relative;">
+          ${UI.renderPet(pet, 50, true)}
+          <div class="pet-happy-aura ${pet.stats?.happiness >= 60 ? 'happy' : 'sad'}"></div>
+        </div>
+        <div>
+          <div class="pet-name" style="display:flex;align-items:center;gap:6px;">
+            <input class="pet-name-editable" value="${pet.customName || pet.nameVi}"
+              onchange="renamePet(${i}, this.value)"
+              onclick="this.select()"
+              title="Nhấn để đổi tên"
+            />
+            <span title="Nhấn vào tên để đổi" style="font-size:0.7rem;cursor:pointer;">✏️</span>
+          </div>
+          <div style="font-size:0.75rem;color:var(--text-muted);">${pet.nameVi}</div>
+        </div>
+        <span class="pet-type-badge">${pet.type === 'dog' ? '🐕 Chó' : '🐈 Mèo'}</span>
+      </div>
+      <div class="pet-stats">${UI.renderPetStats(pet)}</div>
+      <div class="pet-actions">
+        <button class="pet-action-btn pet-action-feed" onclick="openFeedModal(${i})">🍖 Cho ăn</button>
+        <button class="pet-action-btn pet-action-play" onclick="playWithPet(${i})">🎮 Vui chơi</button>
+        <button class="pet-action-btn pet-action-clean" onclick="cleanPet(${i})">🛁 Tắm</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ---- OUTFIT PANEL ----
+function getSlotsForTab(tabKey) {
+  if (tabKey === 'neck') return ['neck', 'chest', 'wrist', 'ring', 'ears'];
+  if (tabKey === 'back') return ['back', 'bag'];
+  return [tabKey];
+}
+
+function renderOutfitPanel() {
+  const outfit = currentStudent.outfit || {};
+  const charEl = document.getElementById('outfitCharPreview');
+  charEl.innerHTML = UI.renderCharacter(currentStudent.gender, currentStudent.characterStyle, outfit, 85, false);
+
+  const slots = [
+    { key: 'top', label: 'Áo', icon: '👕' },
+    { key: 'bottom', label: 'Quần/Váy', icon: '👖' },
+    { key: 'shoes', label: 'Giày', icon: '👟' },
+    { key: 'head', label: 'Mũ', icon: '🧢' },
+    { key: 'glasses', label: 'Kính', icon: '👓' },
+    { key: 'neck', label: 'Cổ', icon: '🧣' },
+    { key: 'hair', label: 'Tóc', icon: '🎀' },
+    { key: 'back', label: 'Lưng/Cánh', icon: '🧚' },
+    { key: 'hand', label: 'Cầm tay', icon: '☂️' },
+    { key: 'face', label: 'Mặt nạ', icon: '🎭' },
+  ];
+  
+  const allItems = [
+    ...GAME_DATA.shops.clothes.items,
+    ...GAME_DATA.shops.accessories.items
+  ];
+
+  document.getElementById('outfitSlots').innerHTML = slots.map(s => {
+    const subSlots = getSlotsForTab(s.key);
+    let equippedItem = null;
+    for (const slotKey of subSlots) {
+      if (outfit[slotKey]) {
+        equippedItem = allItems.find(i => i.id === outfit[slotKey]);
+        if (equippedItem) break;
+      }
+    }
+    return `<div class="outfit-slot" onclick="openOutfitModal('${s.key}')">
+      <span class="outfit-slot-icon">${s.icon}</span>
+      <span class="outfit-slot-name">${s.label}:</span>
+      <span class="outfit-slot-item">${equippedItem ? equippedItem.nameVi : 'Trống'}</span>
+    </div>`;
+  }).join('');
+}
+
+// ---- INVENTORY ----
+function switchInventoryTab(tab) {
+  currentInventoryTab = tab;
+  const tabs = document.querySelectorAll('#inventoryTabs .tab-btn');
+  tabs.forEach(btn => {
+    if (btn.getAttribute('data-tab') === tab) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+  renderInventory();
+}
+
+function renderInventory() {
+  let inv = (currentStudent.inventory || []).filter(i => !i.type || (i.type !== 'dog' && i.type !== 'cat'));
+  
+  // Apply category filtering
+  if (currentInventoryTab === 'furniture') {
+    inv = inv.filter(item => item.id.startsWith('fur_') || item.id.startsWith('dec_'));
+  } else if (currentInventoryTab === 'food') {
+    inv = inv.filter(item => item.effect);
+  } else if (currentInventoryTab === 'clothes') {
+    inv = inv.filter(item => item.id.startsWith('top_') || item.id.startsWith('bot_') || item.id.startsWith('shoe_') || item.id.startsWith('head_') || item.id.startsWith('acc_'));
+  }
+
+  const grid = document.getElementById('inventoryGrid');
+  if (inv.length === 0) {
+    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="empty-state-text">Ngăn này trống rỗng!</div></div>';
+    return;
+  }
+  grid.innerHTML = inv.map((item, i) => {
+    let iconHtml = `<span>${item.icon || item.emoji || '📦'}</span>`;
+    if (item.id.startsWith('fur_') || item.id.startsWith('dec_')) {
+      iconHtml = `<div style="width:40px; height:40px; display:flex; align-items:center; justify-content:center; margin: 0 auto 4px;">${UI.renderFurnitureSVG(item.id, "100%", "100%")}</div>`;
+    }
+    return `
+      <div class="inv-slot" title="${item.nameVi}" onclick="useInventoryItem('${item.id}')">
+        ${iconHtml}
+        <span class="inv-slot-qty">x${item.qty || 1}</span>
+        <span class="inv-slot-name">${item.nameVi?.substring(0,12)}</span>
+      </div>
+    `;
+  }).join('');
+}
+
+function useInventoryItem(itemId) {
+  const inv = (currentStudent.inventory || []);
+  const item = inv.find(i => i.id === itemId);
+  if (!item) return;
+
+  // Food items - open feed modal
+  if (item.effect) {
+    if ((currentStudent.pets || []).length === 0) {
+      showToast('Bạn chưa có thú cưng!', 'error'); return;
+    }
+    feedingPetIndex = 0;
+    openFeedModal(0);
+    return;
+  }
+
+  // Furniture/decor - place in house
+  const houseItem = GAME_DATA.shops.furniture.items.find(f => f.id === itemId) ||
+                    GAME_DATA.shops.decor.items.find(d => d.id === itemId);
+  if (houseItem) {
+    const placed = currentStudent.placedFurniture || [];
+    const countPlaced = placed.filter(p => p.itemId === itemId).length;
+    const invItem = currentStudent.inventory.find(i => i.id === itemId);
+    const qtyOwned = invItem ? (invItem.qty || 1) : 0;
+    
+    if (countPlaced >= qtyOwned) {
+      showToast('Bạn đã đặt hết số lượng vật phẩm này có trong ba lô!', 'error');
+      return;
+    }
+
+    showToast(item.nameVi + ' đã được đặt vào phòng! 🏠', 'success');
+    
+    const newInstance = {
+      id: itemId + '_' + Date.now(),
+      itemId: itemId,
+      left: 30 + Math.random() * 40,
+      bottom: 10 + Math.random() * 40,
+      scale: 2.2,
+      room: currentRoom
+    };
+    placed.push(newInstance);
+    DB.updateStudent(currentStudent.id, { placedFurniture: placed });
+    currentStudent = AUTH.getCurrentStudent();
+    renderRoomFurniture();
+    return;
+  }
+
+  // Clothing/accessories - equip
+  const clothItem = GAME_DATA.shops.clothes.items.find(c => c.id === itemId) ||
+                    GAME_DATA.shops.accessories.items.find(a => a.id === itemId);
+  if (clothItem && clothItem.slot) {
+    const outfit = { ...(currentStudent.outfit || {}), [clothItem.slot]: itemId };
+    DB.updateStudent(currentStudent.id, { outfit });
+    currentStudent = AUTH.getCurrentStudent();
+    renderOutfitPanel();
+    renderRoomCharacter();
+    showToast(item.nameVi + ' đã được mặc! 👗', 'success');
+  }
+}
+
+// ============================================
+// STREET VIEW
+// ============================================
+function renderStreet() {
+  currentStudent = AUTH.getCurrentStudent();
+  const cls = DB.getClasses().find(c => c.id === currentStudent.classId);
+  document.getElementById('streetClassName').textContent = '🏘️ ' + (cls?.name || 'Con Phố');
+
+  const students = DB.getStudents().filter(s => s.classId === currentStudent.classId);
+  const row = document.getElementById('housesRow');
+
+  row.innerHTML = students.map(s => `
+    <div class="house-wrapper" onclick="${s.id !== currentStudent.id ? `visitHouse('${s.id}')` : 'showToast("Đây là nhà của bạn! 🏠", "info")'}">
+      ${UI.renderHouseFront(s, 90)}
+      <div class="house-name-tag" style="${s.id === currentStudent.id ? 'border-color:var(--accent);color:var(--accent)' : ''}">${s.id === currentStudent.id ? '🏠' : ''} ${s.name}</div>
+      <div class="house-pts-tag">⭐${s.points || 0}</div>
+    </div>
+  `).join('');
+
+  // Walking character on street
+  const walkEl = document.getElementById('streetWalkChar');
+  walkEl.innerHTML = UI.renderCharacter(currentStudent.gender, currentStudent.characterStyle, currentStudent.outfit, 70, true);
+}
+
+// ============================================
+// SHOP VIEW
+// ============================================
+let currentShop = 'pets';
+let shopFilter = '';
+let shopGenderFilter = 'all';
+
+function selectShop(shopId) {
+  currentShop = shopId;
+  shopFilter = '';
+  shopGenderFilter = 'all';
+  document.querySelectorAll('.shop-selector-card').forEach(c => c.classList.remove('active'));
+  document.getElementById('shopCard-' + shopId)?.classList.add('active');
+  renderShop(shopId);
+}
+
+function renderShop(shopId) {
+  currentStudent = AUTH.getCurrentStudent();
+  const shop = GAME_DATA.shops[shopId];
+  if (!shop) return;
+
+  document.getElementById('currentShopIcon').textContent = shop.icon;
+  document.getElementById('currentShopName').textContent = shop.nameVi;
+  const descs = { pets: 'Chọn bạn đồng hành lý tưởng', food: 'Đồ ăn cho thú cưng yêu', clothes: 'Thời trang học sinh năng động', accessories: 'Phụ kiện cá tính', furniture: 'Trang bị nội thất cho nhà', decor: 'Làm đẹp không gian sống' };
+  document.getElementById('currentShopDesc').textContent = descs[shopId] || '';
+
+  const inventory = (currentStudent.inventory || []);
+  const ownedIds = inventory.map(i => i.id);
+  const petsOwned = (currentStudent.pets || []).map(p => p.id);
+
+  // Filters for clothes and accessories
+  const filterArea = document.getElementById('shopFilterArea');
+  let filterHtml = '';
+  if (shopId === 'clothes' || shopId === 'accessories') {
+    const genders = [
+      { id: 'all', label: '🌟 Tất cả' },
+      { id: 'male', label: '👦 Đồ Nam' },
+      { id: 'female', label: '👧 Đồ Nữ' }
+    ];
+    filterHtml += `<div class="gender-filter-row" style="display:flex; gap:6px; margin-bottom:8px;">` + 
+      genders.map(g => `<button class="shop-filter-btn ${shopGenderFilter === g.id ? 'active' : ''}" onclick="setShopGenderFilter('${g.id}')">${g.label}</button>`).join('') +
+      `</div>`;
+      
+    if (shopId === 'clothes') {
+      const styles = ['casual', 'school', 'sport', 'formal', 'fantasy', 'seasonal'];
+      filterHtml += `<div class="style-filter-row" style="display:flex; gap:4px; overflow-x:auto; padding-bottom:4px;">` +
+        styles.map(s => `<button class="shop-filter-btn ${shopFilter === s ? 'active' : ''}" onclick="setShopFilter('${s}')">${s.charAt(0).toUpperCase()+s.slice(1)}</button>`).join('') +
+        `</div>`;
+    }
+  }
+  filterArea.innerHTML = filterHtml;
+
+  let items = shop.items;
+  if (shopId === 'clothes' || shopId === 'accessories') {
+    if (shopGenderFilter === 'male') {
+      items = items.filter(i => i.gender === 'male' || i.gender === 'all');
+    } else if (shopGenderFilter === 'female') {
+      items = items.filter(i => i.gender === 'female' || i.gender === 'all');
+    }
+  }
+  if (shopFilter && shopId === 'clothes') items = items.filter(i => i.style === shopFilter);
+
+  const grid = document.getElementById('shopItemsGrid');
+  grid.innerHTML = items.map(item => {
+    const isOwned = ownedIds.includes(item.id) || petsOwned.includes(item.id);
+    const canAfford = currentStudent.points >= item.price;
+    const isPetMax = (item.type === 'dog' || item.type === 'cat') && (currentStudent.pets || []).length >= 3;
+    
+    const gender = currentStudent?.gender || 'male';
+    const styleId = currentStudent?.characterStyle || 'boy_1';
+
+    let iconHtml = '';
+    if (shopId === 'furniture' || shopId === 'decor') {
+      iconHtml = `<div style="width:60px; height:60px; display:flex; align-items:center; justify-content:center; margin:0 auto 6px;">${UI.renderItemPreview(item, gender, styleId, 60)}</div>`;
+    } else if (shopId === 'clothes' || shopId === 'accessories') {
+      iconHtml = `<div style="width:60px; height:60px; display:flex; align-items:center; justify-content:center; margin:0 auto 6px; overflow:visible;">${UI.renderItemPreview(item, gender, styleId, 44)}</div>`;
+    } else if (shopId === 'pets') {
+      iconHtml = `<div style="width:60px; height:60px; display:flex; align-items:center; justify-content:center; margin:0 auto 6px;">${UI.renderItemPreview(item, gender, styleId, 50)}</div>`;
+    } else {
+      iconHtml = `<div style="width:60px; height:60px; display:flex; align-items:center; justify-content:center; margin:0 auto 6px; font-size:2.2rem;">${UI.renderItemPreview(item, gender, styleId, 60)}</div>`;
+    }
+
+    return `
+    <div class="shop-item ${isOwned ? 'owned' : ''} ${(!canAfford || isPetMax) ? 'cant-afford' : ''}"
+         onclick="${(!canAfford || isPetMax) ? '' : `buyItem('${shopId}', '${item.id}')`}">
+      <div class="shop-item-icon">${iconHtml}</div>
+      <div class="shop-item-name">${item.nameVi}</div>
+      ${item.desc ? `<div style="font-size:0.68rem;color:var(--text-muted);margin-bottom:4px;">${item.desc}</div>` : ''}
+      <div class="shop-item-price ${!canAfford ? 'cant-afford-price' : ''}">
+        <span class="coin-icon">⭐</span> ${item.price}
+      </div>
+      ${isOwned ? '<div class="owned-badge">Có rồi</div>' : ''}
+      ${isPetMax ? '<div class="owned-badge" style="background:var(--secondary);">Đầy rồi</div>' : ''}
+      ${!canAfford && !isOwned && !isPetMax ? `<div style="font-size:0.68rem;color:var(--secondary);margin-top:4px;">Thiếu ${item.price - currentStudent.points} ⭐</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function setShopFilter(filter) {
+  shopFilter = shopFilter === filter ? '' : filter;
+  renderShop(currentShop);
+}
+
+function setShopGenderFilter(gender) {
+  shopGenderFilter = gender;
+  renderShop(currentShop);
+}
+
+function buyItem(shopId, itemId) {
+  currentStudent = AUTH.getCurrentStudent();
+  const shop = GAME_DATA.shops[shopId];
+  const item = shop.items.find(i => i.id === itemId);
+  if (!item) return;
+
+  if (currentStudent.points < item.price) {
+    showToast('Không đủ điểm! Cần thêm ' + (item.price - currentStudent.points) + ' ⭐', 'error');
+    return;
+  }
+
+  const result = DB.buyItem(currentStudent.id, item);
+  if (result.success) {
+    currentStudent = AUTH.getCurrentStudent();
+    showToast('Đã mua ' + item.nameVi + '! 🎉', 'success');
+    spawnConfetti();
+    flyPoints('-' + item.price);
+    updateNavInfo();
+    renderShop(shopId);
+    // Add bounce class to clicked item
+    const clickedItem = event?.target?.closest('.shop-item');
+    if (clickedItem) clickedItem.classList.add('just-bought');
+    setTimeout(() => renderHome(), 300);
+  } else {
+    showToast(result.error, 'error');
+  }
+}
+
+// ---- CONFETTI ----
+function spawnConfetti() {
+  const colors = ['#6C63FF','#FF6584','#43E97B','#F7971E','#FFD700','#FF69B4','#00CED1'];
+  for (let i = 0; i < 20; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.cssText = `
+      left: ${Math.random() * 100}vw;
+      top: 0;
+      background: ${colors[Math.floor(Math.random() * colors.length)]};
+      --dur: ${1.2 + Math.random() * 1}s;
+      --delay: ${Math.random() * 0.5}s;
+      width: ${6 + Math.random() * 8}px;
+      height: ${6 + Math.random() * 8}px;
+      border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+    `;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 2500);
+  }
+}
+
+// ---- FLYING POINTS ----
+function flyPoints(text) {
+  const el = document.createElement('div');
+  el.className = 'points-fly';
+  el.textContent = text + ' ⭐';
+  el.style.left = (Math.random() * 60 + 20) + '%';
+  el.style.top = '80px';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1200);
+}
+
+// ============================================
+// PET INTERACTIONS
+// ============================================
+function openFeedModal(petIndex) {
+  feedingPetIndex = petIndex;
+  const pet = (currentStudent.pets || [])[petIndex];
+  if (!pet) return;
+
+  document.getElementById('feedModalTitle').textContent = '🍖 Cho ' + (pet.customName || pet.nameVi) + ' Ăn';
+  document.getElementById('feedPetStats').innerHTML = UI.renderPetStats(pet);
+
+  const foodItems = (currentStudent.inventory || []).filter(i => i.effect);
+  const feedInv = document.getElementById('feedInventory');
+  feedInv.innerHTML = foodItems.length === 0 ?
+    '<div class="empty-state"><div class="empty-state-icon">🍖</div><div class="empty-state-text">Không có đồ ăn! Mua từ cửa hàng nhé.</div></div>' :
+    foodItems.map(item => `
+      <div class="shop-item" onclick="useFoodOnPet('${item.id}', ${petIndex})" style="padding:12px;">
+        <div class="shop-item-icon">${item.icon}</div>
+        <div class="shop-item-name">${item.nameVi}</div>
+        <div style="font-size:0.68rem;color:var(--text-muted);">
+          ${Object.entries(item.effect || {}).map(([k,v]) => {
+            const labels = { hunger:'no bụng', happiness:'hạnh phúc', cleanliness:'vệ sinh', energy:'năng lượng' };
+            return `+${v} ${labels[k] || k}`;
+          }).join(', ')}
+        </div>
+        <div style="font-size:0.72rem;color:var(--warm-light);margin-top:4px;">x${item.qty || 1}</div>
+      </div>
+    `).join('');
+  openModal('feedModal');
+}
+
+function useFoodOnPet(itemId, petIndex) {
+  const result = DB.useFoodItem(currentStudent.id, itemId, petIndex);
+  if (result.success) {
+    currentStudent = AUTH.getCurrentStudent();
+    showToast('Thú cưng đã được cho ăn! 🍖', 'success');
+    renderPetsPanel();
+    renderRoomPets();
+    openFeedModal(petIndex); // refresh modal
+  } else {
+    showToast(result.error || 'Có lỗi xảy ra', 'error');
+  }
+}
+
+function playWithPet(petIndex) {
+  const pet = (currentStudent.pets || [])[petIndex];
+  if (!pet) return;
+  const pets = [...currentStudent.pets];
+  pets[petIndex] = { ...pet, stats: { ...pet.stats, happiness: Math.min(100, (pet.stats?.happiness || 0) + 15), energy: Math.max(0, (pet.stats?.energy || 0) - 10) }, lastUpdate: Date.now() };
+  DB.updateStudent(currentStudent.id, { pets });
+  currentStudent = AUTH.getCurrentStudent();
+  showToast(pet.customName + ' vui lắm! 😊', 'success');
+  renderPetsPanel();
+}
+
+function cleanPet(petIndex) {
+  const pet = (currentStudent.pets || [])[petIndex];
+  if (!pet) return;
+  const pets = [...currentStudent.pets];
+  pets[petIndex] = { ...pet, stats: { ...pet.stats, cleanliness: Math.min(100, (pet.stats?.cleanliness || 0) + 40) }, lastUpdate: Date.now() };
+  DB.updateStudent(currentStudent.id, { pets });
+  currentStudent = AUTH.getCurrentStudent();
+  showToast(pet.customName + ' đã được tắm sạch sẽ! 🛁', 'success');
+  renderPetsPanel();
+}
+
+function renamePet(petIndex, newName) {
+  if (!newName.trim()) return;
+  const pets = [...(currentStudent.pets || [])];
+  if (!pets[petIndex]) return;
+  pets[petIndex] = { ...pets[petIndex], customName: newName.trim() };
+  DB.updateStudent(currentStudent.id, { pets });
+  currentStudent = AUTH.getCurrentStudent();
+  showToast('Đã đổi tên thành ' + newName.trim() + '! ✏️', 'success');
+}
+
+
+// ============================================
+// OUTFIT SYSTEM
+// ============================================
+function openOutfitModal(initSlot = 'top') {
+  currentStudent = AUTH.getCurrentStudent();
+  currentOutfitDraft = { ...(currentStudent.outfit || {}) };
+  currentOutfitSlot = initSlot;
+
+  renderOutfitModalUI();
+  openModal('outfitModal');
+}
+
+function renderOutfitModalUI() {
+  // Character preview
+  document.getElementById('outfitPreviewChar').innerHTML = UI.renderCharacter(
+    currentStudent.gender, currentStudent.characterStyle, currentOutfitDraft, 110, false
+  );
+
+  // Slot tabs
+  const slots = [
+    { key: 'top', icon: '👕', label: 'Áo' },
+    { key: 'bottom', icon: '👖', label: 'Dưới' },
+    { key: 'shoes', icon: '👟', label: 'Giày' },
+    { key: 'head', icon: '🧢', label: 'Mũ' },
+    { key: 'glasses', icon: '👓', label: 'Kính' },
+    { key: 'neck', icon: '🧣', label: 'Cổ' },
+    { key: 'hair', icon: '🎀', label: 'Tóc' },
+    { key: 'back', icon: '🧚', label: 'Cánh' },
+    { key: 'hand', icon: '☂️', label: 'Cầm tay' },
+    { key: 'face', icon: '🎭', label: 'Mặt nạ' },
+  ];
+  document.getElementById('outfitSlotTabs').innerHTML = slots.map(s => `
+    <button class="tab-btn ${currentOutfitSlot === s.key ? 'active' : ''}" onclick="switchOutfitSlot('${s.key}')" style="padding: 6px 10px; font-size: 0.75rem;">
+      ${s.icon} ${s.label}
+    </button>
+  `).join('');
+
+  // Owned items in current slot group (clothing + accessories)
+  const slotGroup = getSlotsForTab(currentOutfitSlot);
+  const owned = (currentStudent.inventory || []);
+  const allSlotItems = [
+    ...GAME_DATA.shops.clothes.items,
+    ...GAME_DATA.shops.accessories.items
+  ].filter(i => slotGroup.includes(i.slot));
+  const ownedInSlot = allSlotItems.filter(i => owned.some(o => o.id === i.id));
+
+  const noneEquipped = slotGroup.every(s => !currentOutfitDraft[s]);
+
+  document.getElementById('outfitSlotItems').innerHTML = `
+    <div class="shop-item ${noneEquipped ? 'owned' : ''}" onclick="setOutfitSlotItem(null)" style="padding:10px;">
+      <div class="shop-item-icon">❌</div>
+      <div class="shop-item-name">Không mặc</div>
+    </div>
+    ${ownedInSlot.map(item => {
+      const isEquipped = slotGroup.some(s => currentOutfitDraft[s] === item.id);
+      return `
+        <div class="shop-item ${isEquipped ? 'owned' : ''}" onclick="setOutfitSlotItem('${item.id}')" style="padding:10px;">
+          <div class="shop-item-icon">${item.icon}</div>
+          <div class="shop-item-name">${item.nameVi}</div>
+          ${item.color ? `<div style="width:20px;height:20px;border-radius:50%;background:${item.color};margin:4px auto;border:2px solid rgba(255,255,255,0.3);"></div>` : ''}
+        </div>
+      `;
+    }).join('')}
+    ${ownedInSlot.length === 0 ? `<div class="empty-state" style="grid-column:1/-1;"><div class="empty-state-icon">${slots.find(s=>s.key===currentOutfitSlot)?.icon || '👕'}</div><div class="empty-state-text">Chưa có đồ! Mua từ cửa hàng.</div><button class="btn btn-primary btn-sm mt-12" onclick="closeModal(\'outfitModal\');switchView(\'shop\')">🛍️ Mua ngay</button></div>` : ''}
+  `;
+
+  // Current outfit list (all 15 slots)
+  const allSlots = ['top', 'bottom', 'shoes', 'head', 'glasses', 'neck', 'chest', 'wrist', 'ring', 'ears', 'hair', 'back', 'bag', 'hand', 'face'];
+  document.getElementById('outfitCurrentList').innerHTML = allSlots.map(s => {
+    const item = [
+      ...GAME_DATA.shops.clothes.items,
+      ...GAME_DATA.shops.accessories.items
+    ].find(i => i.id === currentOutfitDraft[s]);
+    return item ? `<div style="margin-bottom:2px;">${item.icon} ${item.nameVi}</div>` : '';
+  }).filter(Boolean).join('') || '<div style="color:var(--text-dim);">Chưa mặc gì</div>';
+}
+
+function switchOutfitSlot(slot) {
+  currentOutfitSlot = slot;
+  renderOutfitModalUI();
+}
+
+function setOutfitSlotItem(itemId) {
+  const slotGroup = getSlotsForTab(currentOutfitSlot);
+  if (itemId === null) {
+    slotGroup.forEach(s => delete currentOutfitDraft[s]);
+  } else {
+    const item = [
+      ...GAME_DATA.shops.clothes.items,
+      ...GAME_DATA.shops.accessories.items
+    ].find(i => i.id === itemId);
+    if (item && item.slot) {
+      slotGroup.forEach(s => delete currentOutfitDraft[s]);
+      currentOutfitDraft[item.slot] = itemId;
+    }
+  }
+  renderOutfitModalUI();
+}
+
+function saveOutfit() {
+  DB.updateStudent(currentStudent.id, { outfit: currentOutfitDraft });
+  currentStudent = AUTH.getCurrentStudent();
+  closeModal('outfitModal');
+  renderOutfitPanel();
+  renderRoomCharacter();
+  renderStreet();
+  showToast('Trang phục đã được lưu! 👗', 'success');
+}
+
+// ============================================
+// VISIT HOUSE
+// ============================================
+let visitStudentData = null;
+
+function visitHouse(studentId) {
+  const student = DB.getStudent(studentId);
+  if (!student) return;
+  visitStudentData = student;
+  const cls = DB.getClasses().find(c => c.id === student.classId);
+  
+  document.getElementById('visitStudentName').textContent = student.name + ' 🏠';
+  document.getElementById('visitClassLabel').textContent = cls?.name || '';
+
+  const characterHtml = `
+    <div class="room-character" style="position:absolute; bottom:10px; left:50%; transform:translateX(-50%); z-index:10; pointer-events:none;">
+      ${UI.renderCharacter(student.gender, student.characterStyle, student.outfit, 95, false)}
+    </div>`;
+
+  document.getElementById('visitContent').innerHTML = `
+    <!-- Mini room visual -->
+    <div class="room-bg" style="width:100%; min-height:280px; border-radius:var(--radius-lg); overflow:hidden; position:relative; margin-bottom:16px; border: 1px solid var(--border);">
+      <div class="room-walls"></div>
+      <div class="room-wall-pattern"></div>
+      <div class="room-floor-pattern"></div>
+      <div class="room-window"><div class="window-outside">☀️🌳</div></div>
+      
+      <!-- Furniture container -->
+      <div id="visitRoomFurniture" style="position:absolute; left:0; right:0; bottom:0; top:0; pointer-events:none;">
+      </div>
+
+      <!-- Pets container -->
+      <div id="visitRoomPets" style="position:absolute; left:0; right:0; bottom:0; top:0; pointer-events:none;">
+      </div>
+
+      <!-- Character -->
+      ${characterHtml}
+    </div>
+
+    <!-- Room tabs -->
+    <div class="room-tabs" style="justify-content:center;margin-bottom:16px;margin-top:0;">
+      <button class="room-tab-btn visit-room-tab-btn active" id="visitTab_bedroom" onclick="switchVisitRoomTab('bedroom')">🛏️ Phòng ngủ</button>
+      <button class="room-tab-btn visit-room-tab-btn" id="visitTab_living" onclick="switchVisitRoomTab('living')">🛋️ Phòng khách</button>
+      <button class="room-tab-btn visit-room-tab-btn" id="visitTab_kitchen" onclick="switchVisitRoomTab('kitchen')">🍳 Bếp</button>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
+      <div style="text-align:center;background:var(--bg-surface2);padding:16px;border-radius:var(--radius);border:1px solid var(--border);">
+        <div style="font-weight:800;font-size:1.2rem;">${student.name}</div>
+        <div class="points-badge" style="margin:8px auto;display:inline-flex;">⭐ ${student.points || 0} điểm</div>
+      </div>
+      <div style="background:var(--bg-surface2);padding:16px;border-radius:var(--radius);border:1px solid var(--border);">
+        <div style="font-weight:700;margin-bottom:10px;">🐾 Thú cưng (${(student.pets || []).length}):</div>
+        ${(student.pets || []).length === 0 ? '<div style="color:var(--text-muted);font-size:0.85rem;">Không có thú cưng</div>' :
+          student.pets.map(pet => `
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+              <span>${pet.emoji}</span>
+              <div>
+                <span style="font-weight:700;font-size:0.85rem;">${pet.customName || pet.nameVi}</span>
+                <span style="font-size:0.75rem;color:var(--text-muted);"> (${pet.nameVi})</span>
+              </div>
+            </div>
+          `).join('')
+        }
+      </div>
+    </div>
+  `;
+
+  // Load default room bedroom
+  switchVisitRoomTab('bedroom');
+
+  document.getElementById('visitOverlay').classList.add('active');
+}
+
+function switchVisitRoomTab(room) {
+  if (!visitStudentData) return;
+  const placed = visitStudentData.placedFurniture || [];
+  const roomItems = placed.filter(item => item.room === room);
+  
+  // Cập nhật giao diện hình ảnh nền và sàn của phòng khi đi thăm
+  const visitBg = document.querySelector('#visitContent .room-bg');
+  if (visitBg) {
+    visitBg.className = 'room-bg ' + room;
+  }
+  
+  const furnitureHtml = roomItems.map((item) => {
+    const dbItem = GAME_DATA.shops.furniture.items.find(f => f.id === item.itemId) ||
+                   GAME_DATA.shops.decor.items.find(d => d.id === item.itemId);
+    if (!dbItem) return '';
+    const size = item.scale || 2.2;
+    const left = item.left || 50;
+    const bottom = item.bottom || 10;
+    
+    // Get actual dimensions and convert to em
+    const dims = UI.ITEM_DIMENSIONS[item.itemId] || { w: 50, h: 50 };
+    const wEm = (dims.w / 35).toFixed(2) + "em";
+    const hEm = (dims.h / 35).toFixed(2) + "em";
+    const svgHtml = UI.renderFurnitureSVG(item.itemId, wEm, hEm);
+    
+    const zIndex = getFurnitureZIndex(item, roomItems);
+    
+    return `
+    <div class="room-furniture-item" 
+         style="font-size:${size}em; left:${left}%; bottom:${bottom}px; position:absolute; pointer-events:none; z-index:${zIndex};">
+      <div style="transform: rotate(${item.rotation || 0}deg) scaleX(${item.flipX ? -1 : 1}); transition: transform 0.2s; display: flex; justify-content: center; align-items: center;">
+        ${svgHtml}
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('visitRoomFurniture').innerHTML = furnitureHtml;
+
+  // Render pets dynamically with stat-dependent position (using pet bed if sleeping)
+  const petBed = placed.find(item => item.itemId === 'fur_pet_bed' && item.room === room);
+  const petsHtml = (visitStudentData.pets || []).slice(0, 3).map((pet, i) => {
+    const stats = pet.stats || { hunger: 100, happiness: 100, cleanliness: 100, energy: 100 };
+    const energy = stats.energy !== undefined ? stats.energy : 100;
+    const isSleeping = energy < 15;
+    
+    let left = 25 + i * 20;
+    let bottom = 8 + i * 2;
+    if (isSleeping) {
+      if (petBed) {
+        left = petBed.left;
+        bottom = petBed.bottom + 6;
+      } else {
+        left = 80;
+        bottom = 10;
+      }
+    }
+    
+    return `
+    <div style="position:absolute; bottom:${bottom}px; left:${left}%; z-index:${Math.round(150 - bottom)}; pointer-events:none;">
+      ${UI.renderPet(pet, 65, false)}
+    </div>`;
+  }).join('');
+
+  document.getElementById('visitRoomPets').innerHTML = petsHtml;
+  
+  document.querySelectorAll('.visit-room-tab-btn').forEach(btn => btn.classList.remove('active'));
+  document.getElementById('visitTab_' + room).classList.add('active');
+}
+
+function closeVisit() {
+  document.getElementById('visitOverlay').classList.remove('active');
+  visitStudentData = null;
+}
+
+// ============================================
+// SETUP FLOW
+// ============================================
+function showSetupOverlay() {
+  document.getElementById('setupOverlay').style.display = 'flex';
+  setupState.currentStep = 0;
+  updateSetupProgress(0);
+}
+
+function nextSetupStep() {
+  const step = setupState.currentStep;
+  if (step === 1 && !setupState.gender) { showToast('Chọn giới tính trước nhé!', 'error'); return; }
+  if (step === 2 && !setupState.style) { showToast('Chọn kiểu nhân vật trước nhé!', 'error'); return; }
+  if (step === 3 && !setupState.pet) { showToast('Chọn thú cưng trước nhé!', 'error'); return; }
+
+  if (step < 3) {
+    setupState.currentStep++;
+    showSetupStep(setupState.currentStep);
+  } else {
+    finishSetup();
+  }
+}
+
+function prevSetupStep() {
+  if (setupState.currentStep > 0) {
+    setupState.currentStep--;
+    showSetupStep(setupState.currentStep);
+  }
+}
+
+function showSetupStep(n) {
+  document.querySelectorAll('.setup-step').forEach(s => s.classList.remove('active'));
+  document.getElementById('setupStep' + n).classList.add('active');
+  updateSetupProgress(n);
+
+  if (n === 2 && setupState.gender) renderStyleGrid();
+  if (n === 3) renderPetGrid('dog');
+}
+
+function updateSetupProgress(activeStep) {
+  for (let i = 0; i < 4; i++) {
+    const dot = document.getElementById('setupDot' + i);
+    dot.classList.remove('active', 'done');
+    if (i < activeStep) dot.classList.add('done');
+    else if (i === activeStep) dot.classList.add('active');
+  }
+}
+
+function selectGender(gender) {
+  setupState.gender = gender;
+  setupState.style = null;
+  document.querySelectorAll('.gender-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('gender' + gender.charAt(0).toUpperCase() + gender.slice(1)).classList.add('selected');
+  setTimeout(() => nextSetupStep(), 300);
+}
+
+function renderStyleGrid() {
+  const styles = CHARACTER_STYLES[setupState.gender] || [];
+  document.getElementById('styleGrid').innerHTML = styles.map(s => `
+    <div class="style-card ${setupState.style === s.id ? 'selected' : ''}" id="style_${s.id}" onclick="selectStyle('${s.id}')">
+      <div class="style-preview">
+        ${UI.renderCharacter(setupState.gender, s.id, {}, 70, false)}
+      </div>
+      <div class="style-name">${s.name}</div>
+    </div>
+  `).join('');
+}
+
+function selectStyle(styleId) {
+  setupState.style = styleId;
+  document.querySelectorAll('.style-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('style_' + styleId)?.classList.add('selected');
+  setTimeout(() => nextSetupStep(), 300);
+}
+
+function filterSetupPets(type) {
+  document.querySelectorAll('.pet-type-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('petType' + type)?.classList.add('active');
+  renderPetGrid(type);
+}
+
+function renderPetGrid(type) {
+  const pets = type === 'dog' ? GAME_DATA.pets.dogs : GAME_DATA.pets.cats;
+  document.getElementById('petGrid').innerHTML = pets.map(pet => `
+    <div class="pet-option ${setupState.pet?.id === pet.id ? 'selected' : ''}" id="petOpt_${pet.id}" onclick="selectPet('${pet.id}', '${type}')">
+      ${UI.renderPet({ ...pet, stats: { hunger: 100, happiness: 100, cleanliness: 100, energy: 100 } }, 55, true)}
+      <div class="pet-option-name">${pet.nameVi}</div>
+    </div>
+  `).join('');
+}
+
+function selectPet(petId, type) {
+  const pets = type === 'dog' ? GAME_DATA.pets.dogs : GAME_DATA.pets.cats;
+  setupState.pet = pets.find(p => p.id === petId);
+  document.querySelectorAll('.pet-option').forEach(c => c.classList.remove('selected'));
+  document.getElementById('petOpt_' + petId)?.classList.add('selected');
+  setTimeout(() => finishSetup(), 400);
+}
+
+function finishSetup() {
+  if (!setupState.gender || !setupState.style || !setupState.pet) {
+    showToast('Hãy hoàn tất tất cả các bước!', 'error');
+    return;
+  }
+  const pet = {
+    ...setupState.pet,
+    customName: setupState.pet.nameVi,
+    stats: { hunger: 100, happiness: 100, cleanliness: 100, energy: 100 },
+    lastUpdate: Date.now()
+  };
+  DB.updateStudent(currentStudent.id, {
+    gender: setupState.gender,
+    characterStyle: setupState.style,
+    pets: [pet],
+    setupDone: true,
+    houseColor: Math.floor(Math.random() * HOUSE_COLORS.length)
+  });
+  currentStudent = AUTH.getCurrentStudent();
+  document.getElementById('setupOverlay').style.display = 'none';
+  showToast('Chào mừng đến Little Town, ' + currentStudent.name + '! 🎉', 'success');
+  renderHome();
+  renderStreet();
+  renderShop('pets');
+}
+
+// ============================================
+// UTILITIES
+// ============================================
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('active'); });
+});
+
+document.getElementById('visitOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('visitOverlay')) closeVisit();
+});
+
+function showToast(msg, type = 'info') {
+  const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.innerHTML = `<span>${icons[type]}</span> ${msg}`;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 3100);
+}
+
+function logout() {
+  // Logout thường: thiết bị ghi nhớ tài khoản → lần sau tự vào
+  // Nếu muốn đổi tài khoản, giữ phím Shift khi click 🚪
+  AUTH.studentLogout();
+}
+
+function logoutFull() {
+  // Logout hoàn toàn: xóa luôn bộ nhớ thiết bị
+  if (confirm('Bạn muốn đổi sang tài khoản khác?\n\nLần sau sẽ cần link đăng nhập mới từ giáo viên.')) {
+    AUTH.studentLogoutFull();
+  }
+}
+
+// Refresh pet display (called by PET_DECAY)
+function refreshPetDisplay() {
+  currentStudent = AUTH.getCurrentStudent();
+  renderPetsPanel();
+  renderRoomPets();
+}
+
+// ============================================
+// GAME VIEW "HÀNH TRÌNH TRI THỨC" LOGIC
+// ============================================
+const GAME_LEVELS = [
+  { id: 1, name: 'Màn 1: Nhập môn', target: 800, moves: 30, desc: 'Làm quen với việc sắp xếp bút chì và thước kẻ.' },
+  { id: 2, name: 'Màn 2: Rèn luyện', target: 1200, moves: 28, desc: 'Tập trung sắp xếp sách vở và hộp màu.' },
+  { id: 3, name: 'Màn 3: Năng động', target: 1800, moves: 26, desc: 'Hoàn thành bài tập để tích lũy kiến thức.' },
+  { id: 4, name: 'Màn 4: Học nhóm', target: 2400, moves: 24, desc: 'Hợp tác cùng bạn bè để vượt qua thử thách.' },
+  { id: 5, name: 'Màn 5: Thi học kỳ', target: 3200, moves: 22, desc: 'Kỳ thi quan trọng bắt đầu, hãy cố gắng hết sức!' },
+  { id: 6, name: 'Màn 6: Ngoại khóa', target: 4000, moves: 20, desc: 'Hoạt động dã ngoại vui nhộn ngoài trời.' },
+  { id: 7, name: 'Màn 7: Nghiên cứu', target: 5000, moves: 18, desc: 'Nghiên cứu khoa học, khám phá tri thức.' },
+  { id: 8, name: 'Màn 8: Học sinh giỏi', target: 6000, moves: 17, desc: 'Đấu trường trí tuệ đầy cam go.' },
+  { id: 9, name: 'Màn 9: Đỉnh vinh quang', target: 7500, moves: 16, desc: 'Chinh phục những đỉnh cao học thuật.' },
+  { id: 10, name: 'Màn 10: Tốt nghiệp', target: 9000, moves: 15, desc: 'Bài thi tốt nghiệp quyết định. Chúc mừng!' }
+];
+
+const GAME_ITEMS = ['✏️', '📏', '📘', '🎒', '🎨', '📐'];
+
+let activeLevel = 1;
+let gameScore = 0;
+let gameMovesLeft = 0;
+let gameBoard = [];
+let selectedTile = null;
+let isProcessingMatches = false;
+let gameIntervalId = null;
+
+function initGameView() {
+  currentStudent = AUTH.getCurrentStudent();
+  
+  if (currentStudent.gameLevel === undefined) currentStudent.gameLevel = 1;
+  if (currentStudent.gameLives === undefined) currentStudent.gameLives = 3;
+  if (currentStudent.lastLifeLostTime === undefined) currentStudent.lastLifeLostTime = null;
+  
+  updateGameLivesRegen();
+  renderLevelsList();
+  showLevelIntro(activeLevel);
+  
+  if (gameIntervalId) clearInterval(gameIntervalId);
+  gameIntervalId = setInterval(() => {
+    updateGameLivesRegen();
+    updateRegenTimerUI();
+  }, 1000);
+}
+
+function updateGameLivesRegen() {
+  const now = Date.now();
+  let lives = currentStudent.gameLives !== undefined ? currentStudent.gameLives : 3;
+  let lostTime = currentStudent.lastLifeLostTime || null;
+  
+  if (lives < 3 && lostTime) {
+    const REGEN_TIME = 15 * 60 * 1000; // 15 mins
+    const elapsed = now - lostTime;
+    const livesRecovered = Math.floor(elapsed / REGEN_TIME);
+    
+    if (livesRecovered > 0) {
+      lives = Math.min(3, lives + livesRecovered);
+      if (lives === 3) {
+        lostTime = null;
+      } else {
+        lostTime = lostTime + livesRecovered * REGEN_TIME;
+      }
+      
+      currentStudent = DB.updateStudent(currentStudent.id, {
+        gameLives: lives,
+        lastLifeLostTime: lostTime
+      });
+      updateNavInfo();
+    }
+  }
+  updateLivesUI();
+}
+
+function updateLivesUI() {
+  const lives = currentStudent.gameLives !== undefined ? currentStudent.gameLives : 3;
+  const display = document.getElementById('gameLivesDisplay');
+  if (display) {
+    display.textContent = '❤️ ' + lives + '/3';
+  }
+}
+
+function updateRegenTimerUI() {
+  const timerEl = document.getElementById('gameRegenTimer');
+  if (!timerEl) return;
+  
+  const lives = currentStudent.gameLives !== undefined ? currentStudent.gameLives : 3;
+  if (lives >= 3) {
+    timerEl.style.display = 'none';
+    return;
+  }
+  
+  const now = Date.now();
+  const lostTime = currentStudent.lastLifeLostTime;
+  if (!lostTime) {
+    timerEl.style.display = 'none';
+    return;
+  }
+  
+  const REGEN_TIME = 15 * 60 * 1000;
+  const elapsed = now - lostTime;
+  const remainingMs = REGEN_TIME - (elapsed % REGEN_TIME);
+  
+  if (remainingMs > 0) {
+    const min = Math.floor(remainingMs / 60000);
+    const sec = Math.floor((remainingMs % 60000) / 1000);
+    timerEl.textContent = `Hồi mạng sau: ${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+    timerEl.style.display = 'inline-block';
+  } else {
+    timerEl.style.display = 'none';
+  }
+}
+
+function buyGameLife() {
+  currentStudent = AUTH.getCurrentStudent();
+  if (currentStudent.points < 10) {
+    showToast('Bạn không đủ điểm! Cần ít nhất 10 ⭐ để mua mạng.', 'error');
+    return;
+  }
+  
+  let lives = currentStudent.gameLives !== undefined ? currentStudent.gameLives : 3;
+  let lostTime = currentStudent.lastLifeLostTime;
+  
+  if (lives >= 3) {
+    showToast('Bạn đã có tối đa 3 mạng rồi!', 'info');
+    return;
+  }
+  
+  lives += 1;
+  if (lives === 3) {
+    lostTime = null;
+  }
+  
+  const newPoints = currentStudent.points - 10;
+  
+  currentStudent = DB.updateStudent(currentStudent.id, {
+    points: newPoints,
+    gameLives: lives,
+    lastLifeLostTime: lostTime
+  });
+  
+  const history = DB.getHistory();
+  history.push({
+    id: 'hist_' + Date.now(),
+    studentId: currentStudent.id,
+    studentName: currentStudent.name,
+    change: -10,
+    newTotal: newPoints,
+    note: 'Mua lượt chơi game giải trí',
+    timestamp: Date.now()
+  });
+  DB.saveHistory(history);
+  
+  showToast('Mua mạng thành công! ❤️ +1', 'success');
+  flyPoints('-10');
+  updateNavInfo();
+  updateGameLivesRegen();
+  updateRegenTimerUI();
+}
+
+function renderLevelsList() {
+  const unlocked = currentStudent.gameLevel || 1;
+  const listEl = document.getElementById('gameLevelsList');
+  if (!listEl) return;
+  
+  listEl.innerHTML = GAME_LEVELS.map(lvl => {
+    const isUnlocked = lvl.id <= unlocked;
+    const isActive = lvl.id === activeLevel;
+    const cardClass = `level-card ${isUnlocked ? '' : 'locked'} ${isActive ? 'active' : ''}`;
+    
+    return `
+      <div class="${cardClass}" onclick="selectLevel(${lvl.id}, ${isUnlocked})">
+        <div>
+          <span class="level-number">${lvl.name}</span>
+        </div>
+        ${isUnlocked ? `<span class="level-stars">⭐⭐⭐</span>` : `<span class="level-lock">🔒 Khóa</span>`}
+      </div>
+    `;
+  }).join('');
+}
+
+function selectLevel(id, isUnlocked) {
+  if (!isUnlocked) {
+    showToast('Màn chơi này đang khóa. Hãy hoàn thành các màn trước đó nhé!', 'error');
+    return;
+  }
+  activeLevel = id;
+  renderLevelsList();
+  showLevelIntro(activeLevel);
+}
+
+function showLevelIntro(id) {
+  const lvl = GAME_LEVELS.find(l => l.id === id);
+  if (!lvl) return;
+  
+  document.getElementById('gameStartScreen').style.display = 'flex';
+  document.getElementById('gamePlayScreen').style.display = 'none';
+  
+  document.getElementById('introLevelTitle').textContent = lvl.name;
+  document.getElementById('introLevelDesc').textContent = lvl.desc;
+  document.getElementById('introLevelTarget').textContent = lvl.target;
+  document.getElementById('introLevelMoves').textContent = lvl.moves;
+}
+
+function consumeOneGameLife() {
+  currentStudent = AUTH.getCurrentStudent();
+  let lives = currentStudent.gameLives !== undefined ? currentStudent.gameLives : 3;
+  if (lives > 0) {
+    const newLives = lives - 1;
+    let lostTime = currentStudent.lastLifeLostTime;
+    if (lives === 3) {
+      lostTime = Date.now();
+    }
+    
+    currentStudent = DB.updateStudent(currentStudent.id, {
+      gameLives: newLives,
+      lastLifeLostTime: lostTime
+    });
+    
+    updateGameLivesRegen();
+    updateRegenTimerUI();
+    updateNavInfo();
+  }
+}
+
+function startGamePlay() {
+  updateGameLivesRegen();
+  const lives = currentStudent.gameLives !== undefined ? currentStudent.gameLives : 3;
+  if (lives <= 0) {
+    showToast('Hết mạng chơi! Vui lòng đợi hồi mạng hoặc mua mạng mới.', 'error');
+    return;
+  }
+  
+  const lvl = GAME_LEVELS.find(l => l.id === activeLevel);
+  gameScore = 0;
+  gameMovesLeft = lvl.moves;
+  isProcessingMatches = false;
+  selectedTile = null;
+  
+  document.getElementById('gameStartScreen').style.display = 'none';
+  document.getElementById('gamePlayScreen').style.display = 'flex';
+  
+  document.getElementById('hudScore').textContent = `0 / ${lvl.target}`;
+  document.getElementById('hudMoves').textContent = gameMovesLeft;
+  
+  initBoard();
+  renderBoard();
+}
+
+function exitGamePlay() {
+  if (confirm('Bạn có chắc chắn muốn bỏ cuộc? Bạn sẽ mất lượt chơi này.')) {
+    consumeOneGameLife();
+    document.getElementById('gameStartScreen').style.display = 'flex';
+    document.getElementById('gamePlayScreen').style.display = 'none';
+    updateGameLivesRegen();
+  }
+}
+
+function initBoard() {
+  const size = 8;
+  gameBoard = [];
+  for (let r = 0; r < size; r++) {
+    gameBoard[r] = [];
+    for (let c = 0; c < size; c++) {
+      let val;
+      do {
+        val = GAME_ITEMS[Math.floor(Math.random() * GAME_ITEMS.length)];
+      } while (
+        (r >= 2 && gameBoard[r-1][c] === val && gameBoard[r-2][c] === val) ||
+        (c >= 2 && gameBoard[r][c-1] === val && gameBoard[r][c-2] === val)
+      );
+      gameBoard[r][c] = val;
+    }
+  }
+}
+
+function renderBoard() {
+  const boardEl = document.getElementById('match3Board');
+  if (!boardEl) return;
+  
+  boardEl.innerHTML = '';
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const val = gameBoard[r][c];
+      const tile = document.createElement('div');
+      tile.className = 'board-tile';
+      tile.textContent = val;
+      tile.dataset.row = r;
+      tile.dataset.col = c;
+      
+      if (selectedTile && selectedTile.r === r && selectedTile.c === c) {
+        tile.classList.add('selected');
+      }
+      
+      tile.addEventListener('click', () => handleTileClick(r, c));
+      boardEl.appendChild(tile);
+    }
+  }
+}
+
+function handleTileClick(r, c) {
+  if (isProcessingMatches) return;
+  
+  if (!selectedTile) {
+    selectedTile = { r, c };
+    renderBoard();
+  } else {
+    const dr = Math.abs(selectedTile.r - r);
+    const dc = Math.abs(selectedTile.c - c);
+    const isAdjacent = (dr === 1 && dc === 0) || (dr === 0 && dc === 1);
+    
+    if (isAdjacent) {
+      swapTiles(selectedTile.r, selectedTile.c, r, c);
+    }
+    selectedTile = null;
+    renderBoard();
+  }
+}
+
+function swapTiles(r1, c1, r2, c2) {
+  isProcessingMatches = true;
+  
+  const temp = gameBoard[r1][c1];
+  gameBoard[r1][c1] = gameBoard[r2][c2];
+  gameBoard[r2][c2] = temp;
+  
+  renderBoard();
+  
+  const matches = findMatches();
+  if (matches.length > 0) {
+    gameMovesLeft--;
+    document.getElementById('hudMoves').textContent = gameMovesLeft;
+    processBoardMatches();
+  } else {
+    setTimeout(() => {
+      const tempBack = gameBoard[r1][c1];
+      gameBoard[r1][c1] = gameBoard[r2][c2];
+      gameBoard[r2][c2] = tempBack;
+      renderBoard();
+      isProcessingMatches = false;
+      showToast('Không tạo được tổ hợp! Hoán đổi ngược lại 🔄', 'info');
+    }, 300);
+  }
+}
+
+function findMatches() {
+  const matched = [];
+  const size = 8;
+  
+  for (let r = 0; r < size; r++) {
+    let matchLen = 1;
+    for (let c = 0; c < size; c++) {
+      const checkMatch = (c === size - 1);
+      if (!checkMatch && gameBoard[r][c] === gameBoard[r][c+1]) {
+        matchLen++;
+      } else {
+        if (matchLen >= 3) {
+          for (let i = 0; i < matchLen; i++) {
+            matched.push({ r, c: c - i });
+          }
+        }
+        matchLen = 1;
+      }
+    }
+  }
+  
+  for (let c = 0; c < size; c++) {
+    let matchLen = 1;
+    for (let r = 0; r < size; r++) {
+      const checkMatch = (r === size - 1);
+      if (!checkMatch && gameBoard[r][c] === gameBoard[r+1][c]) {
+        matchLen++;
+      } else {
+        if (matchLen >= 3) {
+          for (let i = 0; i < matchLen; i++) {
+            matched.push({ r: r - i, c });
+          }
+        }
+        matchLen = 1;
+      }
+    }
+  }
+  
+  const unique = [];
+  const seen = {};
+  matched.forEach(t => {
+    const key = `${t.r},${t.c}`;
+    if (!seen[key]) {
+      seen[key] = true;
+      unique.push(t);
+    }
+  });
+  return unique;
+}
+
+function processBoardMatches() {
+  const matches = findMatches();
+  if (matches.length === 0) {
+    isProcessingMatches = false;
+    checkGameEndConditions();
+    return;
+  }
+  
+  const boardEl = document.getElementById('match3Board');
+  const tiles = boardEl.childNodes;
+  
+  matches.forEach(m => {
+    const idx = m.r * 8 + m.c;
+    if (tiles[idx]) {
+      tiles[idx].classList.add('tile-match-clearing');
+    }
+  });
+  
+  const pointsAdded = matches.length * 40;
+  gameScore += pointsAdded;
+  
+  const lvl = GAME_LEVELS.find(l => l.id === activeLevel);
+  document.getElementById('hudScore').textContent = `${gameScore} / ${lvl.target}`;
+  
+  setTimeout(() => {
+    matches.forEach(m => {
+      gameBoard[m.r][m.c] = null;
+    });
+    
+    collapseBoard();
+    renderBoard();
+    
+    setTimeout(() => {
+      processBoardMatches();
+    }, 200);
+  }, 250);
+}
+
+function collapseBoard() {
+  const size = 8;
+  for (let c = 0; c < size; c++) {
+    let writeRow = size - 1;
+    for (let r = size - 1; r >= 0; r--) {
+      if (gameBoard[r][c] !== null) {
+        gameBoard[writeRow][c] = gameBoard[r][c];
+        if (writeRow !== r) {
+          gameBoard[r][c] = null;
+        }
+        writeRow--;
+      }
+    }
+    
+    for (let r = writeRow; r >= 0; r--) {
+      gameBoard[r][c] = GAME_ITEMS[Math.floor(Math.random() * GAME_ITEMS.length)];
+    }
+  }
+}
+
+function checkGameEndConditions() {
+  const lvl = GAME_LEVELS.find(l => l.id === activeLevel);
+  
+  if (gameScore >= lvl.target) {
+    isProcessingMatches = true;
+    setTimeout(() => {
+      handleWin(lvl);
+    }, 500);
+  } else if (gameMovesLeft <= 0) {
+    isProcessingMatches = true;
+    setTimeout(() => {
+      handleLose(lvl);
+    }, 500);
+  }
+}
+
+function handleWin(lvl) {
+  showToast(`Tuyệt vời! Bạn đã vượt qua ${lvl.name}! 🎉`, 'success');
+  spawnConfetti();
+  
+  let currentUnlocked = currentStudent.gameLevel || 1;
+  let nextLevelUnlocked = currentUnlocked;
+  if (activeLevel === currentUnlocked && activeLevel < 10) {
+    nextLevelUnlocked = activeLevel + 1;
+  }
+  
+  currentStudent = DB.updateStudent(currentStudent.id, {
+    gameLevel: nextLevelUnlocked
+  });
+  
+  updateNavInfo();
+  
+  alert(`CHÚC MỪNG!\nBạn đã hoàn thành ${lvl.name}!`);
+  
+  document.getElementById('gameStartScreen').style.display = 'flex';
+  document.getElementById('gamePlayScreen').style.display = 'none';
+  
+  initGameView();
+}
+
+function handleLose(lvl) {
+  consumeOneGameLife();
+  showToast(`Rất tiếc! Bạn đã hết lượt đi mà chưa đạt điểm mục tiêu.`, 'error');
+  alert(`BÀI CHƠI KẾT THÚC!\nBạn không đạt đủ mục tiêu ${lvl.target} điểm.`);
+  
+  document.getElementById('gameStartScreen').style.display = 'flex';
+  document.getElementById('gamePlayScreen').style.display = 'none';
+  
+  initGameView();
+}
+
+// ---- START ----
+init();
+</script>
+</body>
+</html>
