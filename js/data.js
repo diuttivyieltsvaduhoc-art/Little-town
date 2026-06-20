@@ -13,7 +13,7 @@ const GAME_DATA = {
       { id: 'dog_husky', name: 'Husky', nameVi: 'Chó Husky', emoji: '🐕', color: '#708090', price: 1200, type: 'dog' },
     ],
     cats: [
-      { id: 'cat_orange', name: 'Orange Cat', nameVi: 'Mèo Vàng', emoji: '🐈', color: '#FF8C42', price: 600, type: 'cat' },
+      { id: 'cat_orange', name: 'Orange Cat', nameVi: 'Mèo Cam Dễ Thương', emoji: '🐈', color: '#E05A47', price: 600, type: 'cat' },
       { id: 'cat_black', name: 'Black Cat', nameVi: 'Mèo Đen', emoji: '🐈‍⬛', color: '#2C2C2C', price: 650, type: 'cat' },
       { id: 'cat_british', name: 'British Shorthair', nameVi: 'Mèo Anh Lông Ngắn', emoji: '🐈', color: '#9B8EA1', price: 1100, type: 'cat' },
       { id: 'cat_maine', name: 'Maine Coon', nameVi: 'Mèo Maine Coon', emoji: '🐈', color: '#A0522D', price: 1300, type: 'cat' },
@@ -350,14 +350,14 @@ GAME_DATA.shops.pets.items = [
 // Character appearance options
 const CHARACTER_STYLES = {
   male: [
-    { id: 'boy_1', name: 'Cool Boy', hair: '#3D2B1F', skin: '#FDBCB4', hairStyle: 'short' },
-    { id: 'boy_2', name: 'Smart Boy', hair: '#1A1A1A', skin: '#8D5524', hairStyle: 'medium' },
-    { id: 'boy_3', name: 'Sporty Boy', hair: '#C19A6B', skin: '#FDDBB4', hairStyle: 'short' },
+    { id: 'boy_1', name: 'Cool Boy', hair: '#7B4B36', skin: '#FEE5D9', hairStyle: 'short' },
+    { id: 'boy_2', name: 'Smart Boy', hair: '#3A3A3C', skin: '#E8C5A8', hairStyle: 'medium' },
+    { id: 'boy_3', name: 'Sporty Boy', hair: '#E05A47', skin: '#FDF0ED', hairStyle: 'short' },
   ],
   female: [
-    { id: 'girl_1', name: 'Cute Girl', hair: '#3D2B1F', skin: '#FDBCB4', hairStyle: 'long' },
-    { id: 'girl_2', name: 'Smart Girl', hair: '#1A1A1A', skin: '#8D5524', hairStyle: 'pigtails' },
-    { id: 'girl_3', name: 'Sporty Girl', hair: '#C19A6B', skin: '#FDDBB4', hairStyle: 'ponytail' },
+    { id: 'girl_1', name: 'Cute Girl', hair: '#E05A47', skin: '#FDF0ED', hairStyle: 'long' },
+    { id: 'girl_2', name: 'Smart Girl', hair: '#7B4B36', skin: '#FEE5D9', hairStyle: 'pigtails' },
+    { id: 'girl_3', name: 'Sporty Girl', hair: '#E6B89C', skin: '#FDF0ED', hairStyle: 'ponytail' },
   ]
 };
 

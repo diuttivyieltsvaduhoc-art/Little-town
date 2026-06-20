@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Little Town 🏘️ - Nhà của bạn</title>
   <meta name="description" content="Little Town - Student Home">
-  <link rel="stylesheet" href="css/main.css?v=2">
-  <link rel="stylesheet" href="css/student.css?v=2">
-  <link rel="stylesheet" href="css/shop.css?v=2">
+  <link rel="stylesheet" href="css/main.css?v=3">
+  <link rel="stylesheet" href="css/student.css?v=3">
+  <link rel="stylesheet" href="css/shop.css?v=3">
   <style>
     .remove-handle {
       position: absolute;
@@ -84,6 +84,53 @@
     .room-furniture-item.resizing, .room-furniture-item.dragging {
       animation: none !important;
     }
+    
+    /* Special Match-3 Tile effects */
+    .board-tile.special-tile {
+      box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.4);
+      animation: specialGlow 1.5s infinite alternate;
+    }
+    .board-tile.special-row::before {
+      content: '';
+      position: absolute;
+      left: 0; right: 0; top: calc(50% - 2px);
+      height: 4px;
+      background: linear-gradient(to right, transparent, #FFF, transparent);
+      box-shadow: 0 0 8px #FFF;
+      pointer-events: none;
+      z-index: 2;
+    }
+    .board-tile.special-col::before {
+      content: '';
+      position: absolute;
+      top: 0; bottom: 0; left: calc(50% - 2px);
+      width: 4px;
+      background: linear-gradient(to bottom, transparent, #FFF, transparent);
+      box-shadow: 0 0 8px #FFF;
+      pointer-events: none;
+      z-index: 2;
+    }
+    .board-tile.special-bomb {
+      background: rgba(231, 76, 60, 0.25) !important;
+      border: 2px solid #E74C3C;
+      animation: bombPulse 0.8s infinite alternate !important;
+    }
+    .board-tile.special-bomb::after {
+      content: '💣';
+      position: absolute;
+      font-size: 0.9rem;
+      bottom: 2px;
+      right: 2px;
+      z-index: 3;
+    }
+    @keyframes specialGlow {
+      0% { box-shadow: inset 0 0 6px rgba(255,255,255,0.2), 0 0 4px rgba(255,255,255,0.1); }
+      100% { box-shadow: inset 0 0 16px rgba(255,255,255,0.6), 0 0 12px rgba(255,255,255,0.4); }
+    }
+    @keyframes bombPulse {
+      0% { transform: scale(1); box-shadow: 0 0 5px rgba(231, 76, 60, 0.5); }
+      100% { transform: scale(0.92); box-shadow: 0 0 15px rgba(231, 76, 60, 0.9); }
+    }
   </style>
 </head>
 <body>
@@ -97,6 +144,7 @@
     <button class="nav-btn" id="navGame" onclick="switchView('game')">🎮 Giải trí</button>
   </div>
   <div class="nav-student">
+    <button class="btn btn-ghost btn-sm" id="btnAudioMute" onclick="window.toggleMute()" title="Tắt/Bật âm thanh" style="padding:6px 10px; font-size:1.05rem; border-radius:50%; margin-right:4px;">🔊</button>
     <div class="nav-points" id="navPoints">⭐ 0</div>
     <div class="nav-student-name" id="navName">Loading...</div>
     <div style="position:relative;display:inline-block;">
@@ -353,6 +401,17 @@
                 <span class="hud-val" id="hudMoves">30</span>
               </div>
               <button class="btn btn-sm btn-ghost" onclick="exitGamePlay()">🏳️ Đầu hàng</button>
+              <button class="btn btn-sm btn-ghost" onclick="window.toggleDebugControls()" title="Mở bảng gỡ lỗi" style="margin-left: 5px;">⚙️</button>
+            </div>
+            
+            <!-- Debug Panel -->
+            <div id="debugMatch3Controls" style="display: none; margin: 10px 0; padding: 10px; background: rgba(0,0,0,0.5); border-radius: 8px; flex-wrap: wrap; gap: 8px; justify-content: center; z-index: 100;">
+              <button class="btn btn-sm btn-warning" onclick="window.setup4MatchTest()" id="btnDebug4Match">Setup 4-Match</button>
+              <button class="btn btn-sm btn-warning" onclick="window.setup5MatchTest()" id="btnDebug5Match">Setup 5-Match</button>
+              <button class="btn btn-sm btn-warning" onclick="window.setupLineLineCombo()" id="btnDebugLineLine">Setup Line-Line</button>
+              <button class="btn btn-sm btn-warning" onclick="window.setupLineBombCombo()" id="btnDebugLineBomb">Setup Line-Bomb</button>
+              <button class="btn btn-sm btn-warning" onclick="window.setupBombBombCombo()" id="btnDebugBombBomb">Setup Bomb-Bomb</button>
+              <button class="btn btn-sm btn-danger" onclick="if(window.currentStudent){currentStudent.gameLives=3;gameMovesLeft=30;updateGameLivesRegen();updateNavInfo();document.getElementById('hudMoves').textContent=gameMovesLeft;}" id="btnDebugLives">Lives/Moves</button>
             </div>
             
             <div class="game-grid-container">
@@ -503,10 +562,11 @@
 <!-- Toast -->
 <div id="toast-container"></div>
 
-<script src="js/data.js"></script>
-<script src="js/sync.js"></script>
-<script src="js/auth.js"></script>
-<script src="js/ui.js"></script>
+<script src="js/audio.js?v=3"></script>
+<script src="js/data.js?v=3"></script>
+<script src="js/sync.js?v=3"></script>
+<script src="js/auth.js?v=3"></script>
+<script src="js/ui.js?v=3"></script>
 <script>
 // ============================================
 // LITTLE TOWN - STUDENT.JS (inline)
@@ -559,6 +619,27 @@ let currentInventoryTab = 'all';
 
 // ---- INIT ----
 function init() {
+  if (window.AudioSynth) {
+    AudioSynth.init();
+    const startAudioOnInteraction = () => {
+      AudioSynth.getContext();
+      if (!AudioSynth.isMuted) {
+        // Play main BGM only if not in match-3 play screen
+        const gamePlayVisible = document.getElementById('gamePlayScreen') && document.getElementById('gamePlayScreen').style.display === 'flex';
+        const gameViewActive = document.getElementById('viewGame') && document.getElementById('viewGame').classList.contains('active');
+        if (gameViewActive && gamePlayVisible) {
+          AudioSynth.startGameBgm();
+        } else {
+          AudioSynth.startMainBgm();
+        }
+      }
+      document.removeEventListener('click', startAudioOnInteraction);
+      document.removeEventListener('touchstart', startAudioOnInteraction);
+    };
+    document.addEventListener('click', startAudioOnInteraction);
+    document.addEventListener('touchstart', startAudioOnInteraction);
+  }
+
   currentStudent = AUTH.getCurrentStudent();
   updateNavInfo();
   applyTheme();
@@ -629,6 +710,16 @@ function switchView(viewName) {
   if (viewName === 'street') renderStreet();
   if (viewName === 'shop') { renderShop(currentShop); updateNavInfo(); }
   if (viewName === 'game') initGameView();
+
+  // BGM Transition on View Switch
+  if (window.AudioSynth) {
+    const gamePlayVisible = document.getElementById('gamePlayScreen') && document.getElementById('gamePlayScreen').style.display === 'flex';
+    if (viewName === 'game' && gamePlayVisible) {
+      AudioSynth.startGameBgm();
+    } else {
+      AudioSynth.startMainBgm();
+    }
+  }
 }
 
 // ============================================
@@ -670,7 +761,7 @@ function renderRoomPets() {
   const pets = currentStudent.pets || [];
   const positions = ['room-pet room-pet-1', 'room-pet room-pet-2', 'room-pet room-pet-3'];
   petsEl.innerHTML = pets.slice(0, 3).map((pet, i) => `
-    <div class="${positions[i]}" id="room_pet_${i}">
+    <div class="${positions[i]}" id="room_pet_${i}" onclick="window.playPetSound('${pet.type}')" style="cursor:pointer;">
       ${UI.renderPet(pet, 70, true)}
     </div>
   `).join('');
@@ -694,6 +785,7 @@ function rotatePlacedFurniture(instId) {
     currentStudent = AUTH.getCurrentStudent();
     renderRoomFurniture();
     showToast('Đã xoay vật phẩm 🔄', 'info');
+    if (window.playFurnitureSound) window.playFurnitureSound();
   }
 }
 
@@ -706,6 +798,7 @@ function flipPlacedFurniture(instId) {
     currentStudent = AUTH.getCurrentStudent();
     renderRoomFurniture();
     showToast('Đã lật đối xứng vật phẩm ↔️', 'info');
+    if (window.playFurnitureSound) window.playFurnitureSound();
   }
 }
 
@@ -990,6 +1083,7 @@ function startFurnitureDrag(e, instId) {
       DB.updateStudent(currentStudent.id, { placedFurniture: placed });
       currentStudent = AUTH.getCurrentStudent();
       renderRoomFurniture();
+      if (window.playFurnitureSound) window.playFurnitureSound();
     }
   }
 
@@ -1043,6 +1137,7 @@ function startFurnitureResize(e, instId) {
       DB.updateStudent(currentStudent.id, { placedFurniture: placed });
       currentStudent = AUTH.getCurrentStudent();
       showToast('Đã lưu kích cỡ ' + newSize.toFixed(1) + 'x ✅', 'info');
+      if (window.playFurnitureSound) window.playFurnitureSound();
     }
   }
 
@@ -1064,6 +1159,7 @@ function removePlacedFurniture(instId) {
     currentStudent = AUTH.getCurrentStudent();
     renderRoomFurniture();
     showToast('Đã thu hồi vật phẩm về ba lô 📦', 'info');
+    if (window.playFurnitureSound) window.playFurnitureSound();
   }
 }
 
@@ -1099,7 +1195,7 @@ function renderPetsPanel() {
   container.innerHTML = pets.map((pet, i) => `
     <div class="pet-card" id="petCard${i}">
       <div class="pet-card-header">
-        <div style="position:relative;">
+        <div style="position:relative; cursor:pointer;" onclick="window.playPetSound('${pet.type}')">
           ${UI.renderPet(pet, 50, true)}
           <div class="pet-happy-aura ${pet.stats?.happiness >= 60 ? 'happy' : 'sad'}"></div>
         </div>
@@ -1262,6 +1358,7 @@ function useInventoryItem(itemId) {
     DB.updateStudent(currentStudent.id, { placedFurniture: placed });
     currentStudent = AUTH.getCurrentStudent();
     renderRoomFurniture();
+    if (window.playFurnitureSound) window.playFurnitureSound();
     return;
   }
 
@@ -1988,7 +2085,7 @@ const GAME_LEVELS = [
   { id: 10, name: 'Màn 10: Tốt nghiệp', target: 9000, moves: 15, desc: 'Bài thi tốt nghiệp quyết định. Chúc mừng!' }
 ];
 
-const GAME_ITEMS = ['✏️', '📏', '📘', '🎒', '🎨', '📐'];
+const GAME_ITEMS = ['✏️', '📏', '📘', '🎒', '🎨', '✂️'];
 
 let activeLevel = 1;
 let gameScore = 0;
@@ -2203,6 +2300,8 @@ function startGamePlay() {
     return;
   }
   
+  if (window.AudioSynth) AudioSynth.startGameBgm();
+  
   const lvl = GAME_LEVELS.find(l => l.id === activeLevel);
   gameScore = 0;
   gameMovesLeft = lvl.moves;
@@ -2225,6 +2324,7 @@ function exitGamePlay() {
     document.getElementById('gameStartScreen').style.display = 'flex';
     document.getElementById('gamePlayScreen').style.display = 'none';
     updateGameLivesRegen();
+    if (window.AudioSynth) AudioSynth.startMainBgm();
   }
 }
 
@@ -2246,6 +2346,17 @@ function initBoard() {
   }
 }
 
+// Helper functions for special match-3 items
+function getTileType(tile) {
+  if (!tile) return null;
+  return typeof tile === 'object' ? tile.type : tile;
+}
+
+function getTileSpecial(tile) {
+  if (!tile || typeof tile !== 'object') return null;
+  return tile.special;
+}
+
 function renderBoard() {
   const boardEl = document.getElementById('match3Board');
   if (!boardEl) return;
@@ -2256,9 +2367,17 @@ function renderBoard() {
       const val = gameBoard[r][c];
       const tile = document.createElement('div');
       tile.className = 'board-tile';
-      tile.textContent = val;
+      
+      const isObj = typeof val === 'object' && val !== null;
+      const emoji = isObj ? val.type : val;
+      tile.textContent = emoji || '';
+      
       tile.dataset.row = r;
       tile.dataset.col = c;
+      
+      if (isObj && val.special) {
+        tile.classList.add('special-tile', `special-${val.special}`);
+      }
       
       if (selectedTile && selectedTile.r === r && selectedTile.c === c) {
         tile.classList.add('selected');
@@ -2289,9 +2408,25 @@ function handleTileClick(r, c) {
   }
 }
 
+// Track the last active swap to decide where to spawn special tiles
+let lastActiveSwap = null;
+
 function swapTiles(r1, c1, r2, c2) {
   isProcessingMatches = true;
+  lastActiveSwap = { r1, c1, r2, c2 };
   
+  const t1 = gameBoard[r1][c1];
+  const t2 = gameBoard[r2][c2];
+  const s1 = getTileSpecial(t1);
+  const s2 = getTileSpecial(t2);
+  
+  // Detect special combo swaps!
+  if (s1 && s2) {
+    handleSpecialCombo(r1, c1, r2, c2, s1, s2);
+    return;
+  }
+  
+  // Normal swap
   const temp = gameBoard[r1][c1];
   gameBoard[r1][c1] = gameBoard[r2][c2];
   gameBoard[r2][c2] = temp;
@@ -2310,93 +2445,399 @@ function swapTiles(r1, c1, r2, c2) {
       gameBoard[r2][c2] = tempBack;
       renderBoard();
       isProcessingMatches = false;
+      lastActiveSwap = null;
       showToast('Không tạo được tổ hợp! Hoán đổi ngược lại 🔄', 'info');
     }, 300);
   }
 }
 
-function findMatches() {
-  const matched = [];
+function handleSpecialCombo(r1, c1, r2, c2, s1, s2) {
+  gameMovesLeft--;
+  document.getElementById('hudMoves').textContent = gameMovesLeft;
+
+  let clearedTiles = [];
   const size = 8;
-  
-  for (let r = 0; r < size; r++) {
-    let matchLen = 1;
-    for (let c = 0; c < size; c++) {
-      const checkMatch = (c === size - 1);
-      if (!checkMatch && gameBoard[r][c] === gameBoard[r][c+1]) {
-        matchLen++;
-      } else {
-        if (matchLen >= 3) {
-          for (let i = 0; i < matchLen; i++) {
-            matched.push({ r, c: c - i });
-          }
-        }
-        matchLen = 1;
-      }
-    }
-  }
-  
-  for (let c = 0; c < size; c++) {
-    let matchLen = 1;
+
+  // Perform visual swap
+  const temp = gameBoard[r1][c1];
+  gameBoard[r1][c1] = gameBoard[r2][c2];
+  gameBoard[r2][c2] = temp;
+  renderBoard();
+
+  const isLine1 = s1 === 'row' || s1 === 'col';
+  const isLine2 = s2 === 'row' || s2 === 'col';
+
+  if (isLine1 && isLine2) {
+    // Horizontal/Vertical Blast + Horizontal/Vertical Blast: clear both rows and both columns
+    const rowsToClear = new Set([r1, r2]);
+    const colsToClear = new Set([c1, c2]);
     for (let r = 0; r < size; r++) {
-      const checkMatch = (r === size - 1);
-      if (!checkMatch && gameBoard[r][c] === gameBoard[r+1][c]) {
-        matchLen++;
-      } else {
-        if (matchLen >= 3) {
-          for (let i = 0; i < matchLen; i++) {
-            matched.push({ r: r - i, c });
-          }
-        }
-        matchLen = 1;
+      colsToClear.forEach(c => clearedTiles.push({ r, c }));
+    }
+    for (let c = 0; c < size; c++) {
+      rowsToClear.forEach(r => clearedTiles.push({ r, c }));
+    }
+  } else if (s1 === 'bomb' && s2 === 'bomb') {
+    // Bomb + Bomb: 6x6 area centered on the midpoint
+    const startR = Math.max(0, Math.floor((r1 + r2) / 2) - 2);
+    const endR = Math.min(size - 1, startR + 5);
+    const startC = Math.max(0, Math.floor((c1 + c2) / 2) - 2);
+    const endC = Math.min(size - 1, startC + 5);
+    for (let r = startR; r <= endR; r++) {
+      for (let c = startC; c <= endC; c++) {
+        clearedTiles.push({ r, c });
+      }
+    }
+  } else if ((isLine1 && s2 === 'bomb') || (s1 === 'bomb' && isLine2)) {
+    // Line + Bomb combo: 3 rows and 3 columns centered on the midpoint
+    const centerR = Math.floor((r1 + r2) / 2);
+    const centerC = Math.floor((c1 + c2) / 2);
+    for (let r = Math.max(0, centerR - 1); r <= Math.min(size - 1, centerR + 1); r++) {
+      for (let c = 0; c < size; c++) {
+        clearedTiles.push({ r, c });
+      }
+    }
+    for (let c = Math.max(0, centerC - 1); c <= Math.min(size - 1, centerC + 1); c++) {
+      for (let r = 0; r < size; r++) {
+        clearedTiles.push({ r, c });
       }
     }
   }
-  
-  const unique = [];
+
+  // Deduplicate
+  const uniqueCleared = [];
   const seen = {};
-  matched.forEach(t => {
+  clearedTiles.forEach(t => {
     const key = `${t.r},${t.c}`;
     if (!seen[key]) {
       seen[key] = true;
-      unique.push(t);
+      uniqueCleared.push(t);
     }
   });
-  return unique;
-}
 
-function processBoardMatches() {
-  const matches = findMatches();
-  if (matches.length === 0) {
-    isProcessingMatches = false;
-    checkGameEndConditions();
-    return;
-  }
-  
+  // Trigger cascade special tile effects
+  const finalCleared = triggerSpecialEffects(uniqueCleared);
+
+  // Animate clearing
   const boardEl = document.getElementById('match3Board');
   const tiles = boardEl.childNodes;
-  
-  matches.forEach(m => {
-    const idx = m.r * 8 + m.c;
+  finalCleared.forEach(m => {
+    const idx = m.r * size + m.c;
     if (tiles[idx]) {
       tiles[idx].classList.add('tile-match-clearing');
     }
   });
-  
-  const pointsAdded = matches.length * 40;
+
+  // Calculate score
+  const pointsAdded = finalCleared.length * 40;
   gameScore += pointsAdded;
-  
   const lvl = GAME_LEVELS.find(l => l.id === activeLevel);
   document.getElementById('hudScore').textContent = `${gameScore} / ${lvl.target}`;
-  
+
+  // Clear tiles, collapse board
   setTimeout(() => {
-    matches.forEach(m => {
+    finalCleared.forEach(m => {
       gameBoard[m.r][m.c] = null;
     });
     
+    lastActiveSwap = null;
     collapseBoard();
     renderBoard();
     
+    setTimeout(() => {
+      processBoardMatches();
+    }, 200);
+  }, 250);
+}
+
+function findMatchGroups() {
+  const size = 8;
+  const horizMatches = [];
+  const vertMatches = [];
+
+  // 1. Horizontal matches of length >= 3
+  for (let r = 0; r < size; r++) {
+    let matchLen = 1;
+    for (let c = 0; c < size; c++) {
+      const isEnd = (c === size - 1);
+      const currentType = getTileType(gameBoard[r][c]);
+      const nextType = isEnd ? null : getTileType(gameBoard[r][c+1]);
+      
+      if (!isEnd && currentType === nextType && currentType !== null) {
+        matchLen++;
+      } else {
+        if (matchLen >= 3) {
+          const match = [];
+          for (let i = 0; i < matchLen; i++) {
+            match.push({ r, c: c - i, type: currentType });
+          }
+          horizMatches.push(match);
+        }
+        matchLen = 1;
+      }
+    }
+  }
+
+  // 2. Vertical matches of length >= 3
+  for (let c = 0; c < size; c++) {
+    let matchLen = 1;
+    for (let r = 0; r < size; r++) {
+      const isEnd = (r === size - 1);
+      const currentType = getTileType(gameBoard[r][c]);
+      const nextType = isEnd ? null : getTileType(gameBoard[r+1][c]);
+      
+      if (!isEnd && currentType === nextType && currentType !== null) {
+        matchLen++;
+      } else {
+        if (matchLen >= 3) {
+          const match = [];
+          for (let i = 0; i < matchLen; i++) {
+            match.push({ r: r - i, c, type: currentType });
+          }
+          vertMatches.push(match);
+        }
+        matchLen = 1;
+      }
+    }
+  }
+
+  // 3. Group intersecting matches of same type
+  const groups = [];
+  const allMatches = [...horizMatches, ...vertMatches];
+
+  allMatches.forEach(m => {
+    let merged = false;
+    for (let g of groups) {
+      if (g.type === m[0].type) {
+        const intersects = m.some(mTile => 
+          g.tiles.some(gTile => gTile.r === mTile.r && gTile.c === mTile.c)
+        );
+        if (intersects) {
+          m.forEach(mTile => {
+            if (!g.tiles.some(gTile => gTile.r === mTile.r && gTile.c === mTile.c)) {
+              g.tiles.push(mTile);
+            }
+          });
+          merged = true;
+          break;
+        }
+      }
+    }
+    if (!merged) {
+      groups.push({
+        type: m[0].type,
+        tiles: [...m]
+      });
+    }
+  });
+
+  // Transitive merge groups
+  let mergedAny = true;
+  while (mergedAny) {
+    mergedAny = false;
+    for (let i = 0; i < groups.length; i++) {
+      for (let j = i + 1; j < groups.length; j++) {
+        if (groups[i].type === groups[j].type) {
+          const intersects = groups[i].tiles.some(iTile => 
+            groups[j].tiles.some(jTile => jTile.r === iTile.r && jTile.c === iTile.c)
+          );
+          if (intersects) {
+            groups[j].tiles.forEach(jTile => {
+              if (!groups[i].tiles.some(iTile => iTile.r === jTile.r && iTile.c === jTile.c)) {
+                groups[i].tiles.push(jTile);
+              }
+            });
+            groups.splice(j, 1);
+            mergedAny = true;
+            break;
+          }
+        }
+      }
+      if (mergedAny) break;
+    }
+  }
+
+  return groups;
+}
+
+function findMatches() {
+  const groups = findMatchGroups();
+  const matched = [];
+  const seen = {};
+  groups.forEach(g => {
+    g.tiles.forEach(t => {
+      const key = `${t.r},${t.c}`;
+      if (!seen[key]) {
+        seen[key] = true;
+        matched.push({ r: t.r, c: t.c });
+      }
+    });
+  });
+  return matched;
+}
+
+// Queue-based triggers for row/col blast and bombs, with cascading support
+function triggerSpecialEffects(initialMatches) {
+  const clearedSet = new Set();
+  const queue = [];
+  let explodedLine = false;
+  let explodedBomb = false;
+
+  initialMatches.forEach(m => {
+    const key = `${m.r},${m.c}`;
+    if (!clearedSet.has(key)) {
+      clearedSet.add(key);
+      queue.push(m);
+    }
+  });
+
+  const size = 8;
+
+  while (queue.length > 0) {
+    const curr = queue.shift();
+    const tile = gameBoard[curr.r][curr.c];
+    if (!tile || typeof tile !== 'object') continue;
+
+    const special = tile.special;
+    if (!special) continue;
+
+    if (special === 'row') {
+      explodedLine = true;
+      for (let c = 0; c < size; c++) {
+        const key = `${curr.r},${c}`;
+        if (!clearedSet.has(key)) {
+          clearedSet.add(key);
+          queue.push({ r: curr.r, c });
+        }
+      }
+    } else if (special === 'col') {
+      explodedLine = true;
+      for (let r = 0; r < size; r++) {
+        const key = `${r},${curr.c}`;
+        if (!clearedSet.has(key)) {
+          clearedSet.add(key);
+          queue.push({ r, c: curr.c });
+        }
+      }
+    } else if (special === 'bomb') {
+      explodedBomb = true;
+      for (let dr = -1; dr <= 1; dr++) {
+        for (let dc = -1; dc <= 1; dc++) {
+          const nr = curr.r + dr;
+          const nc = curr.c + dc;
+          if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
+            const key = `${nr},${nc}`;
+            if (!clearedSet.has(key)) {
+              clearedSet.add(key);
+              queue.push({ r: nr, c: nc });
+            }
+          }
+        }
+      }
+    }
+  }
+
+  if (window.AudioSynth) {
+    if (explodedBomb) AudioSynth.playBombBlastSound();
+    if (explodedLine) AudioSynth.playLineBlastSound();
+    if (!explodedBomb && !explodedLine && initialMatches.length > 0) {
+      AudioSynth.playMatch3Sound();
+    }
+  }
+
+  return Array.from(clearedSet).map(key => {
+    const [r, c] = key.split(',').map(Number);
+    return { r, c };
+  });
+}
+
+function chooseSpecialPlacementTile(matchedTiles) {
+  if (lastActiveSwap) {
+    const swap1 = matchedTiles.find(t => t.r === lastActiveSwap.r1 && t.c === lastActiveSwap.c1);
+    if (swap1) return swap1;
+    const swap2 = matchedTiles.find(t => t.r === lastActiveSwap.r2 && t.c === lastActiveSwap.c2);
+    if (swap2) return swap2;
+  }
+  const midIdx = Math.floor(matchedTiles.length / 2);
+  return matchedTiles[midIdx];
+}
+
+function processBoardMatches() {
+  const groups = findMatchGroups();
+  if (groups.length === 0) {
+    isProcessingMatches = false;
+    lastActiveSwap = null;
+    checkGameEndConditions();
+    return;
+  }
+
+  // Flatten matched coordinates
+  const initialMatches = [];
+  const seen = {};
+  groups.forEach(g => {
+    g.tiles.forEach(t => {
+      const key = `${t.r},${t.c}`;
+      if (!seen[key]) {
+        seen[key] = true;
+        initialMatches.push({ r: t.r, c: t.c });
+      }
+    });
+  });
+
+  // Calculate final cleared list with cascades
+  const finalCleared = triggerSpecialEffects(initialMatches);
+
+  // Detect new specials creation
+  const pendingSpecials = [];
+  groups.forEach(g => {
+    if (g.tiles.length >= 5) {
+      const target = chooseSpecialPlacementTile(g.tiles);
+      pendingSpecials.push({ r: target.r, c: target.c, specialType: 'bomb', baseType: g.type });
+    } else if (g.tiles.length === 4) {
+      const target = chooseSpecialPlacementTile(g.tiles);
+      // Determine if horizontal (row) or vertical (col) match
+      let rowCount = {};
+      g.tiles.forEach(t => rowCount[t.r] = (rowCount[t.r] || 0) + 1);
+      let isRowMatch = Object.values(rowCount).some(count => count >= 4);
+      
+      const specialType = isRowMatch ? 'row' : 'col';
+      pendingSpecials.push({ r: target.r, c: target.c, specialType, baseType: g.type });
+    }
+  });
+
+  // Visual clear transition
+  const boardEl = document.getElementById('match3Board');
+  const tiles = boardEl.childNodes;
+  finalCleared.forEach(m => {
+    const isBecomingSpecial = pendingSpecials.some(p => p.r === m.r && p.c === m.c);
+    if (!isBecomingSpecial) {
+      const idx = m.r * 8 + m.c;
+      if (tiles[idx]) {
+        tiles[idx].classList.add('tile-match-clearing');
+      }
+    }
+  });
+
+  // Update score
+  const pointsAdded = finalCleared.length * 40;
+  gameScore += pointsAdded;
+  const lvl = GAME_LEVELS.find(l => l.id === activeLevel);
+  document.getElementById('hudScore').textContent = `${gameScore} / ${lvl.target}`;
+
+  // Clear matched board slots & insert specials
+  setTimeout(() => {
+    finalCleared.forEach(m => {
+      gameBoard[m.r][m.c] = null;
+    });
+
+    pendingSpecials.forEach(p => {
+      gameBoard[p.r][p.c] = { type: p.baseType, special: p.specialType };
+    });
+
+    lastActiveSwap = null;
+    collapseBoard();
+    renderBoard();
+
     setTimeout(() => {
       processBoardMatches();
     }, 200);
@@ -2440,6 +2881,12 @@ function checkGameEndConditions() {
 }
 
 function handleWin(lvl) {
+  if (window.AudioSynth) {
+    AudioSynth.stopAllBgm();
+    AudioSynth.playLevelWin();
+    AudioSynth.startMainBgm();
+  }
+
   showToast(`Tuyệt vời! Bạn đã vượt qua ${lvl.name}! 🎉`, 'success');
   spawnConfetti();
   
@@ -2464,6 +2911,12 @@ function handleWin(lvl) {
 }
 
 function handleLose(lvl) {
+  if (window.AudioSynth) {
+    AudioSynth.stopAllBgm();
+    AudioSynth.playLevelLose();
+    AudioSynth.startMainBgm();
+  }
+
   consumeOneGameLife();
   showToast(`Rất tiếc! Bạn đã hết lượt đi mà chưa đạt điểm mục tiêu.`, 'error');
   alert(`BÀI CHƠI KẾT THÚC!\nBạn không đạt đủ mục tiêu ${lvl.target} điểm.`);
@@ -2473,6 +2926,67 @@ function handleLose(lvl) {
   
   initGameView();
 }
+
+// ---- DEBUG HELPER ----
+window.debugSetSpecial = function(r, c, specialType) {
+  const currentVal = gameBoard[r][c];
+  const type = getTileType(currentVal);
+  if (type) {
+    gameBoard[r][c] = { type, special: specialType };
+    renderBoard();
+    return `Tile at (${r},${c}) set to ${type} (${specialType})`;
+  }
+  return "Invalid tile";
+};
+
+window.toggleDebugControls = function() {
+  const panel = document.getElementById('debugMatch3Controls');
+  if (panel) {
+    panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
+  }
+};
+
+window.setup4MatchTest = function() {
+  gameBoard[0][0] = '✏️';
+  gameBoard[0][1] = '✏️';
+  gameBoard[0][2] = '✏️';
+  gameBoard[0][3] = '🎒';
+  gameBoard[1][3] = '✏️';
+  renderBoard();
+  return "4-match setup done. Swap (0,3) and (1,3) to form a horizontal 4-match.";
+};
+
+window.setup5MatchTest = function() {
+  gameBoard[0][0] = '✏️';
+  gameBoard[0][1] = '✏️';
+  gameBoard[0][2] = '✏️';
+  gameBoard[0][3] = '✏️';
+  gameBoard[0][4] = '🎒';
+  gameBoard[1][4] = '✏️';
+  renderBoard();
+  return "5-match setup done. Swap (0,4) and (1,4) to form a horizontal 5-match.";
+};
+
+window.setupLineLineCombo = function() {
+  gameBoard[0][0] = { type: '✏️', special: 'row' };
+  gameBoard[0][1] = { type: '🎒', special: 'col' };
+  renderBoard();
+  return "Line-Line combo setup done. Swap (0,0) and (0,1).";
+};
+
+window.setupBombBombCombo = function() {
+  gameBoard[0][0] = { type: '✏️', special: 'bomb' };
+  gameBoard[0][1] = { type: '🎒', special: 'bomb' };
+  renderBoard();
+  return "Bomb-Bomb combo setup done. Swap (0,0) and (0,1).";
+};
+
+window.setupLineBombCombo = function() {
+  gameBoard[0][0] = { type: '✏️', special: 'row' };
+  gameBoard[0][1] = { type: '🎒', special: 'bomb' };
+  renderBoard();
+  return "Line-Bomb combo setup done. Swap (0,0) and (0,1).";
+};
 
 // ---- START ----
 init();

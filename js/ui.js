@@ -20,6 +20,11 @@ const UI = {
     return `
     <div class="character-sprite ${walkClass}" style="width:${size}px;height:${size}px;position:relative;">
       <svg viewBox="0 0 80 100" width="${size}" height="${size * 1.25}" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <clipPath id="hood-face-clip">
+            <rect x="18" y="9" width="44" height="48" rx="5"/>
+          </clipPath>
+        </defs>
         <!-- Shadow -->
         <ellipse cx="40" cy="98" rx="15" ry="3" fill="rgba(0,0,0,0.2)"/>
         
@@ -42,28 +47,43 @@ const UI = {
         <!-- Neck -->
         <rect x="34" y="36" width="12" height="8" rx="2" fill="${skinColor}"/>
         
-        <!-- Head -->
-        <circle cx="40" cy="26" r="18" fill="${skinColor}"/>
+        <!-- Head / Hood -->
+        ${!outfit || !outfit.head ? `
+          <!-- Ears -->
+          <polygon points="20,14 26,0 34,16" fill="#FAF9F6"/>
+          <polygon points="60,14 54,0 46,16" fill="#FAF9F6"/>
+          <polygon points="22,13 26,2.5 32,15" fill="#FDF0ED"/>
+          <polygon points="58,13 54,2.5 48,15" fill="#FDF0ED"/>
+          <!-- Hood base -->
+          <circle cx="40" cy="26" r="18.5" fill="#FAF9F6"/>
+          <!-- Face skin -->
+          <circle cx="40" cy="26.5" r="16.5" fill="${skinColor}"/>
+        ` : `
+          <!-- Normal Head -->
+          <circle cx="40" cy="26" r="18" fill="${skinColor}"/>
+        `}
         
         <!-- Hair -->
-        ${this.renderHair(gender, styleId, hairColor)}
+        ${!outfit || !outfit.head ? `
+          <g clip-path="url(#hood-face-clip)">
+            ${this.renderHair(gender, styleId, hairColor)}
+          </g>
+        ` : this.renderHair(gender, styleId, hairColor)}
         
         <!-- Cute Flat Eyebrows -->
-        <path d="M29 19 Q33 17 37 19" stroke="#2C1810" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.6"/>
-        <path d="M43 19 Q47 17 51 19" stroke="#2C1810" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.6"/>
-
-        <!-- Cute Flat Eyes -->
-        <circle cx="33.5" cy="24.5" r="3.5" fill="#2C1810"/>
-        <circle cx="46.5" cy="24.5" r="3.5" fill="#2C1810"/>
-        <circle cx="35" cy="23" r="1.2" fill="white"/>
-        <circle cx="48" cy="23" r="1.2" fill="white"/>
+        <path d="M29 18 Q33 16.5 37 18" stroke="#3D2B1F" stroke-width="1" fill="none" stroke-linecap="round" opacity="0.4"/>
+        <path d="M43 18 Q47 16.5 51 18" stroke="#3D2B1F" stroke-width="1" fill="none" stroke-linecap="round" opacity="0.4"/>
+        
+        <!-- Cute Flat Oval Eyes (Cozy Style) -->
+        <ellipse cx="33" cy="24" rx="2.8" ry="4" fill="#3D2B1F"/>
+        <ellipse cx="47" cy="24" rx="2.8" ry="4" fill="#3D2B1F"/>
         
         <!-- Simple Cute Smile -->
-        <path d="M36 30 Q40 33.5 44 30" stroke="#2C1810" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+        <path d="M37 29.5 Q40 32 43 29.5" stroke="#3D2B1F" stroke-width="1.5" fill="none" stroke-linecap="round"/>
         
-        <!-- Cute Soft Blush -->
-        <circle cx="28" cy="29" r="3.2" fill="rgba(255,102,128,0.35)"/>
-        <circle cx="52" cy="29" r="3.2" fill="rgba(255,102,128,0.35)"/>
+        <!-- Cute Soft Cozy Blush -->
+        <ellipse cx="27" cy="28" rx="4.8" ry="2.8" fill="rgba(253,142,142,0.45)"/>
+        <ellipse cx="53" cy="28" rx="4.8" ry="2.8" fill="rgba(253,142,142,0.45)"/>
         
         <!-- Headwear overlay -->
         ${this.renderHeadwear(outfit)}
@@ -126,9 +146,18 @@ const UI = {
   },
 
   renderTop(outfitData, outfit, skinColor) {
-    const defaultTop = `<rect x="26" y="42" width="28" height="30" rx="4" fill="${outfitData.topColor}"/>
-                        <rect x="15" y="44" width="11" height="22" rx="5" fill="${outfitData.topColor}" class="char-arm-l"/>
-                        <rect x="54" y="44" width="11" height="22" rx="5" fill="${outfitData.topColor}" class="char-arm-r"/>`;
+    const defaultTop = `<!-- Cream A-line Dress -->
+                        <path d="M26 42 L54 42 L60 78 L20 78 Z" fill="#FAF9F6"/>
+                        <!-- Brown Backpack Straps -->
+                        <rect x="26" y="42" width="4.5" height="22" fill="#7B4B36" rx="1"/>
+                        <rect x="49.5" y="42" width="4.5" height="22" fill="#7B4B36" rx="1"/>
+                        <!-- Cream Dress Sleeves -->
+                        <rect x="15" y="44" width="11" height="22" rx="5.5" fill="#FAF9F6" class="char-arm-l"/>
+                        <rect x="54" y="44" width="11" height="22" rx="5.5" fill="#FAF9F6" class="char-arm-r"/>
+                        <!-- Yellow Neck Ornament Tag -->
+                        <line x1="40" y1="42" x2="40" y2="52" stroke="#7B4B36" stroke-width="1.5"/>
+                        <rect x="36" y="52" width="8" height="11" rx="1.5" fill="#FED766"/>
+                        <circle cx="40" cy="55.5" r="1.2" fill="#3D2B1F"/>`;
     if (!outfit || !outfit.top) return defaultTop;
     
     const id = outfit.top;
@@ -381,8 +410,8 @@ const UI = {
        <rect x="42" y="70" width="11" height="24" rx="4" fill="${outfitData.bottomColor}" class="char-leg-r"/>`;
        
     if (!outfit || !outfit.bottom) {
-      // If dress is worn, top extends down, but bottom is hidden
-      if (outfit.top && (outfit.top.includes('dress') || outfit.top.includes('kimono') || outfit.top.includes('yukata'))) {
+      // Nếu mặc váy mặc định (không có top) hoặc mặc váy mua trong shop, ẩn phần bottom
+      if (!outfit || !outfit.top || (outfit.top && (outfit.top.includes('dress') || outfit.top.includes('kimono') || outfit.top.includes('yukata')))) {
         return '';
       }
       return defaultBottom;
@@ -909,18 +938,14 @@ const UI = {
                 <path d="M 28 12 Q 40 8 52 12" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2" stroke-linecap="round"/>`;
       }
     } else {
-      if (styleId === 'girl_1') { // Mái bằng (Flat/Blunt bangs, long hair)
-        return `<!-- Back hair -->
-                <path d="M 19 22 Q 12 55 17 82 L 25 82 Q 20 50 24 22 Z" fill="${hairColor}"/>
-                <path d="M 61 22 Q 68 55 63 82 L 55 82 Q 60 50 56 22 Z" fill="${hairColor}"/>
-                <!-- Main cap & flat bangs -->
-                <path d="M 20 29 L 20 20 C 20 0, 60 0, 60 20 L 60 29 C 58 26, 56 20, 40 20 C 24 20, 22 26, 20 29 Z" fill="${hairColor}"/>
-                <!-- Flat bangs strand lines -->
-                <path d="M 27 20 L 27 22 M 33 20 L 33 22 M 40 20 L 40 22 M 47 20 L 47 22 M 53 20 L 53 22" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="1" stroke-linecap="round"/>
-                <!-- Top locks / strands separation -->
-                <path d="M 32 8 Q 28 18 24 26" fill="none" stroke="rgba(0,0,0,0.15)" stroke-width="1.5" stroke-linecap="round"/>
-                <path d="M 48 8 Q 52 18 56 26" fill="none" stroke="rgba(0,0,0,0.15)" stroke-width="1.5" stroke-linecap="round"/>
-                <path d="M 28 12 Q 40 8 52 12" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2" stroke-linecap="round"/>`;
+      if (styleId === 'girl_1') { // Cozy bob hair (as in sample)
+        return `<!-- Base Hair Cap -->
+                <path d="M 20 25 A 20 20 0 0 1 60 25 Z" fill="${hairColor}"/>
+                <!-- Side locks wrapping cheeks -->
+                <path d="M 21 24 C 20 35, 23 39, 23 39 C 24 39, 25 35, 25 24 Z" fill="${hairColor}"/>
+                <path d="M 59 24 C 60 35, 57 39, 57 39 C 56 39, 55 35, 55 24 Z" fill="${hairColor}"/>
+                <!-- Fringe/Bangs with three curves peeking out -->
+                <path d="M 21 24 Q 40 18 59 24 Q 52 28 46 23 Q 40 29 34 23 Q 28 28 21 24 Z" fill="${hairColor}"/>`;
       } else if (styleId === 'girl_2') { // Mái bay (Curtain bangs, pigtails)
         return `<!-- Main cap -->
                 <path d="M 20 25 L 20 20 C 20 0, 60 0, 60 20 L 60 25 C 56 20, 48 18, 44 20 C 40 21, 38 17, 33 18 C 28 20, 24 21, 20 25 Z" fill="${hairColor}"/>
@@ -1046,24 +1071,21 @@ const UI = {
     let eyesHtml = '';
     if (isSleeping) {
       eyesHtml = `
-        <path d="M29 25 Q33 28 37 25" stroke="#2C1810" stroke-width="2" fill="none" stroke-linecap="round"/>
-        <path d="M43 25 Q47 28 51 25" stroke="#2C1810" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <path d="M29 27 Q33 30 37 27" stroke="#3D2B1F" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+        <path d="M43 27 Q47 30 51 27" stroke="#3D2B1F" stroke-width="1.8" fill="none" stroke-linecap="round"/>
       `;
     } else if (isHungry || isSad) {
-      // Squinting sad eyebrows
       eyesHtml = `
-        <path d="M29 21 L35 24" stroke="#2C1810" stroke-width="2.5" stroke-linecap="round"/>
-        <path d="M51 21 L45 24" stroke="#2C1810" stroke-width="2.5" stroke-linecap="round"/>
-        <circle cx="33" cy="26" r="3.5" fill="${colors.eyes || '#2C1810'}"/>
-        <circle cx="47" cy="26" r="3.5" fill="${colors.eyes || '#2C1810'}"/>
+        <path d="M29 23 L35 26" stroke="#3D2B1F" stroke-width="2" stroke-linecap="round"/>
+        <path d="M51 23 L45 26" stroke="#3D2B1F" stroke-width="2" stroke-linecap="round"/>
+        <ellipse cx="33" cy="27" rx="1.8" ry="3.5" fill="#3D2B1F"/>
+        <ellipse cx="47" cy="27" rx="1.8" ry="3.5" fill="#3D2B1F"/>
       `;
     } else {
-      // Normal/happy shiny eyes
+      // Normal/happy flat eyes (Cozy Style)
       eyesHtml = `
-        <circle cx="33" cy="25" r="4" fill="${colors.eyes || '#2C1810'}"/>
-        <circle cx="47" cy="25" r="4" fill="${colors.eyes || '#2C1810'}"/>
-        <circle cx="34" cy="24" r="1.5" fill="white"/>
-        <circle cx="48" cy="24" r="1.5" fill="white"/>
+        <ellipse cx="33" cy="26" rx="2" ry="3.8" fill="#3D2B1F"/>
+        <ellipse cx="47" cy="26" rx="2" ry="3.8" fill="#3D2B1F"/>
       `;
     }
 
@@ -1144,6 +1166,10 @@ const UI = {
         <circle cx="40" cy="30" r="18" fill="${colors.body}"/>
         ${headMarkings}
         
+        <!-- Cute Cheek Blush -->
+        <circle cx="27" cy="32" r="3" fill="rgba(253,142,142,0.45)"/>
+        <circle cx="53" cy="32" r="3" fill="rgba(253,142,142,0.45)"/>
+        
         <!-- Ears -->
         <ellipse cx="24" cy="20" rx="8" ry="12" fill="${colors.ear}" transform="rotate(-15 24 20)"/>
         ${earMarkings}
@@ -1204,84 +1230,54 @@ const UI = {
     let bodyMarkings = '';
     let headMarkings = '';
     
-    if (id === 'cat_orange') {
-      // Orange stripes
-      bodyMarkings = `<!-- Stripes -->
-                      <path d="M22 52 Q28 53 26 56 Q28 59 22 60" stroke="#D35400" stroke-width="2" fill="none"/>
-                      <path d="M58 52 Q52 53 54 56 Q52 59 58 60" stroke="#D35400" stroke-width="2" fill="none"/>`;
-      headMarkings = `<!-- Head stripes -->
-                      <path d="M36 14 L40 18 L44 14" stroke="#D35400" stroke-width="1.5" fill="none"/>
-                      <path d="M24 26 Q30 26 28 28" stroke="#D35400" stroke-width="1.5" fill="none"/>
-                      <path d="M56 26 Q50 26 52 28" stroke="#D35400" stroke-width="1.5" fill="none"/>`;
-    } else if (id === 'cat_siamese') {
-      // Siamese dark face mask
-      headMarkings = `<!-- Siamese Dark Mask -->
-                      <ellipse cx="40" cy="30" rx="10" ry="8" fill="#5C4033"/>`;
-    } else if (id === 'cat_black') {
-      bodyMarkings = `<circle cx="40" cy="50" r="5" fill="#FFF"/>`;
-      headMarkings = `<circle cx="28" cy="31" r="3.5" fill="#FF8A8A" opacity="0.6"/>
-                      <circle cx="52" cy="31" r="3.5" fill="#FF8A8A" opacity="0.6"/>`;
-    } else if (id === 'cat_british') {
-      headMarkings = `<ellipse cx="26" cy="32" rx="5" ry="4" fill="rgba(0,0,0,0.05)"/>
-                      <ellipse cx="54" cy="32" rx="5" ry="4" fill="rgba(0,0,0,0.05)"/>`;
-    } else if (id === 'cat_maine') {
-      bodyMarkings = `<path d="M28 48 Q40 40 52 48 Q40 65 28 48" fill="#E8D7D0"/>`;
-    }
-
-    // Dynamic eyes
+    // Cozy flat eyes and cheeks (matches user's cozy illustration style)
     let eyesHtml = '';
     if (isSleeping) {
       eyesHtml = `
-        <path d="M29 26 Q33 29 37 26" stroke="#2C1810" stroke-width="2" fill="none" stroke-linecap="round"/>
-        <path d="M43 26 Q47 29 51 26" stroke="#2C1810" stroke-width="2" fill="none" stroke-linecap="round"/>
-      `;
-    } else if (isHungry || isSad) {
-      eyesHtml = `
-        <path d="M29 22 L35 25" stroke="#2C1810" stroke-width="2.5" stroke-linecap="round"/>
-        <path d="M51 22 L45 25" stroke="#2C1810" stroke-width="2.5" stroke-linecap="round"/>
-        <ellipse cx="33" cy="27" rx="4" ry="5" fill="${colors.eyes}"/>
-        <ellipse cx="47" cy="27" rx="4" ry="5" fill="${colors.eyes}"/>
-        <ellipse cx="33" cy="27" rx="1.5" ry="4" fill="#1A1A1A"/>
-        <ellipse cx="47" cy="27" rx="1.5" ry="4" fill="#1A1A1A"/>
+        <path d="M29 27 Q33 30 37 27" stroke="#3D2B1F" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+        <path d="M43 27 Q47 30 51 27" stroke="#3D2B1F" stroke-width="1.8" fill="none" stroke-linecap="round"/>
       `;
     } else {
       eyesHtml = `
-        <ellipse cx="33" cy="26" rx="5" ry="6" fill="${colors.eyes}"/>
-        <ellipse cx="47" cy="26" rx="5" ry="6" fill="${colors.eyes}"/>
-        <ellipse cx="33" cy="26" rx="2" ry="5" fill="#1A1A1A"/>
-        <ellipse cx="47" cy="26" rx="2" ry="5" fill="#1A1A1A"/>
-        <circle cx="34" cy="24" r="1.5" fill="white"/>
-        <circle cx="48" cy="24" r="1.5" fill="white"/>
+        <ellipse cx="32" cy="27" rx="1.8" ry="3.5" fill="#3D2B1F"/>
+        <ellipse cx="48" cy="27" rx="1.8" ry="3.5" fill="#3D2B1F"/>
       `;
     }
 
-    // Dynamic mouth
-    let mouthHtml = '';
-    if (isSleeping) {
-      mouthHtml = `<path d="M37 37 Q40 39 43 37" stroke="#2C1810" stroke-width="1.5" fill="none" stroke-linecap="round"/>`;
-    } else if (isHungry || isSad) {
-      mouthHtml = `<path d="M36 39 Q40 35 44 39" stroke="#2C1810" stroke-width="1.5" fill="none" stroke-linecap="round"/>`;
-    } else if (isHappy) {
-      mouthHtml = `<path d="M35 36 Q40 42 45 36 Z" fill="#E91E63" stroke="#2C1810" stroke-width="1.5"/>`;
-    } else {
-      mouthHtml = `<path d="M37 36 Q40 40 43 36" stroke="#2C1810" stroke-width="1.5" fill="none" stroke-linecap="round"/>`;
+    let mouthHtml = `<path d="M37 34.5 Q40 37.5 43 34.5" stroke="#3D2B1F" stroke-width="1.5" fill="none" stroke-linecap="round"/>`;
+    if (isHungry || isSad) {
+      mouthHtml = `<path d="M37 37 Q40 34 43 37" stroke="#3D2B1F" stroke-width="1.5" fill="none" stroke-linecap="round"/>`;
     }
 
-    // Dirt spots
+    // Default white chest/belly for the cozy look
+    let chestPatch = `<path d="M 30 72 C 30 50, 50 50, 50 72 Z" fill="#FFF" opacity="0.95"/>`;
+
+    if (id === 'cat_orange') {
+      bodyMarkings = ``;
+      headMarkings = ``;
+    } else if (id === 'cat_siamese') {
+      headMarkings = `<ellipse cx="40" cy="30" rx="10" ry="7" fill="#5D4037"/>`;
+      chestPatch = `<path d="M 30 72 C 30 52, 50 52, 50 72 Z" fill="#5D4037" opacity="0.2"/>`;
+    } else if (id === 'cat_black') {
+      eyesHtml = isSleeping ? eyesHtml : `
+        <ellipse cx="32" cy="27" rx="2" ry="4" fill="#FFEB3B"/>
+        <ellipse cx="48" cy="27" rx="2" ry="4" fill="#FFEB3B"/>
+        <ellipse cx="32" cy="27" rx="0.8" ry="3.2" fill="#1A1A1A"/>
+        <ellipse cx="48" cy="27" rx="0.8" ry="3.2" fill="#1A1A1A"/>
+      `;
+      chestPatch = `<circle cx="40" cy="62" r="6" fill="#FFF"/>`;
+    } else if (id === 'cat_british') {
+      chestPatch = `<path d="M 31 72 C 31 52, 49 52, 49 72 Z" fill="#FFF" opacity="0.5"/>`;
+    } else if (id === 'cat_maine') {
+      chestPatch = `<path d="M 24 55 Q 40 45 56 55 Q 40 73 24 55 Z" fill="#E8D7D0"/>`;
+    }
+
+    // Dirty mud spots
     let dirtyMarkings = '';
     if (isDirty) {
       dirtyMarkings = `
-        <!-- Mud spots -->
-        <circle cx="28" cy="58" r="3.5" fill="#5C4033" opacity="0.75"/>
-        <circle cx="46" cy="62" r="2.5" fill="#5C4033" opacity="0.75"/>
-        <circle cx="50" cy="48" r="4" fill="#5C4033" opacity="0.65"/>
-        <!-- Buzzing flies -->
-        <g opacity="0.8">
-          <circle cx="20" cy="45" r="1" fill="#333"/>
-          <path d="M19 44 L21 46" stroke="#333" stroke-width="0.5"/>
-          <circle cx="58" cy="42" r="1" fill="#333"/>
-          <path d="M57 41 L59 43" stroke="#333" stroke-width="0.5"/>
-        </g>
+        <circle cx="28" cy="62" r="3" fill="#5C4033" opacity="0.6"/>
+        <circle cx="48" cy="65" r="2" fill="#5C4033" opacity="0.6"/>
       `;
     }
 
@@ -1289,7 +1285,6 @@ const UI = {
     let statusBubble = '';
     if (isSleeping) {
       statusBubble = `
-        <!-- Sleeping Zzz -->
         <g>
           <ellipse cx="64" cy="18" rx="11" ry="9" fill="rgba(41,128,185,0.75)" stroke="#AED6F1" stroke-width="1"/>
           <ellipse cx="57" cy="26" rx="3.5" ry="3.5" fill="rgba(41,128,185,0.75)"/>
@@ -1299,7 +1294,6 @@ const UI = {
       `;
     } else if (isSleepy) {
       statusBubble = `
-        <!-- Sleepy yawn -->
         <g>
           <ellipse cx="64" cy="18" rx="10" ry="8" fill="rgba(241,196,15,0.75)" stroke="#FFF" stroke-width="1"/>
           <ellipse cx="57" cy="26" rx="3" ry="3" fill="rgba(241,196,15,0.75)"/>
@@ -1310,7 +1304,6 @@ const UI = {
 
     if (isHungry) {
       statusBubble += `
-        <!-- Hungry warning -->
         <g>
           <ellipse cx="15" cy="18" rx="10" ry="9" fill="rgba(0,0,0,0.75)" stroke="#FF6B6B" stroke-width="1.5"/>
           <ellipse cx="22" cy="25" rx="3" ry="3" fill="rgba(0,0,0,0.75)"/>
@@ -1323,48 +1316,59 @@ const UI = {
     return `
     <div class="pet-sprite ${animClass}" style="display:inline-block;position:relative;">
       <svg viewBox="0 0 80 80" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">
-        <!-- Body -->
-        <ellipse cx="40" cy="56" rx="20" ry="17" fill="${colors.body}"/>
+        <!-- Shadow -->
+        <ellipse cx="40" cy="76" rx="20" ry="3" fill="rgba(0,0,0,0.15)"/>
+
+        <!-- Tail -->
+        <g class="pet-tail">
+          <path d="M 54 64 Q 68 58 65 42 Q 62 30 65 40" stroke="${colors.body}" stroke-width="5.5" fill="none" stroke-linecap="round"/>
+          <path d="M 64 42 L 65 40" stroke="#FFF" stroke-width="5.5" stroke-linecap="round"/>
+        </g>
+
+        <!-- Sitting Thighs (Left and Right) -->
+        <circle cx="26" cy="65" r="8" fill="${colors.body}"/>
+        <circle cx="54" cy="65" r="8" fill="${colors.body}"/>
+
+        <!-- Pear-shaped Sitting Body -->
+        <path d="M 24 68 C 24 45, 56 45, 56 68 Z" fill="${colors.body}"/>
+        ${chestPatch}
         ${bodyMarkings}
         ${dirtyMarkings}
-        
+
+        <!-- Front feet (Paws) -->
+        <rect x="31" y="60" width="6" height="15" rx="3" fill="${colors.body}"/>
+        <rect x="43" y="60" width="6" height="15" rx="3" fill="${colors.body}"/>
+        <circle cx="34" cy="74.5" r="3.2" fill="#FFF"/>
+        <circle cx="46" cy="74.5" r="3.2" fill="#FFF"/>
+
+        <!-- Triangular Ears -->
+        <!-- Left Ear -->
+        <polygon points="21,12 28,26 15,24" fill="${colors.body}"/>
+        <polygon points="22,15 27,24 17,23" fill="#FFAEC9"/>
+        <!-- Right Ear -->
+        <polygon points="59,12 52,26 65,24" fill="${colors.body}"/>
+        <polygon points="58,15 53,24 63,23" fill="#FFAEC9"/>
+
         <!-- Head -->
-        <circle cx="40" cy="28" r="18" fill="${colors.body}"/>
+        <circle cx="40" cy="30" r="16.5" fill="${colors.body}"/>
         ${headMarkings}
+
+        <!-- Cute Cheek Blush -->
+        <circle cx="27" cy="32" r="3.2" fill="rgba(253,142,142,0.45)"/>
+        <circle cx="53" cy="32" r="3.2" fill="rgba(253,142,142,0.45)"/>
+
+        <!-- Snout (White round patch) -->
+        <ellipse cx="40" cy="33.5" rx="4.5" ry="3.5" fill="#FFF"/>
         
-        <!-- Cat Ears (triangle) -->
-        <polygon points="22,18 16,2 32,12" fill="${colors.body}"/>
-        <polygon points="58,18 64,2 48,12" fill="${colors.body}"/>
-        <polygon points="24,16 19,6 30,13" fill="${colors.ear}"/>
-        <polygon points="56,16 61,6 50,13" fill="${colors.ear}"/>
-        
+        <!-- Nose (Small dark triangle) -->
+        <polygon points="38.5,32.5 41.5,32.5 40,34" fill="#3D2B1F"/>
+
         <!-- Eyes -->
         ${eyesHtml}
-        
-        <!-- Nose -->
-        <polygon points="40,33 38,36 42,36" fill="#E91E63"/>
-        <!-- Whiskers -->
-        <line x1="20" y1="34" x2="36" y2="35" stroke="rgba(0,0,0,0.5)" stroke-width="1"/>
-        <line x1="20" y1="37" x2="36" y2="37" stroke="rgba(0,0,0,0.5)" stroke-width="1"/>
-        <line x1="44" y1="35" x2="60" y2="34" stroke="rgba(0,0,0,0.5)" stroke-width="1"/>
-        <line x1="44" y1="37" x2="60" y2="37" stroke="rgba(0,0,0,0.5)" stroke-width="1"/>
-        
+
         <!-- Mouth -->
         ${mouthHtml}
-        
-        <!-- Tail -->
-        <path d="M60 65 Q80 60 78 45 Q76 35 68 42 Q72 48 65 55" stroke="${colors.body}" stroke-width="7" fill="none" stroke-linecap="round" class="pet-tail"/>
-        
-        <!-- Legs -->
-        <rect x="24" y="68" width="9" height="13" rx="4" fill="${colors.body}"/>
-        <rect x="36" y="68" width="9" height="13" rx="4" fill="${colors.body}"/>
-        <rect x="48" y="68" width="9" height="13" rx="4" fill="${colors.body}"/>
-        
-        <!-- Paws -->
-        <ellipse cx="28" cy="79" rx="5" ry="3" fill="${colors.ear}"/>
-        <ellipse cx="40" cy="79" rx="5" ry="3" fill="${colors.ear}"/>
-        <ellipse cx="53" cy="79" rx="5" ry="3" fill="${colors.ear}"/>
-        
+
         <!-- Status Bubbles -->
         ${statusBubble}
       </svg>
@@ -1379,6 +1383,7 @@ const UI = {
       '#D4784A': { body: '#D4784A', ear: '#A04820', snout: '#E89870', eyes: '#2C1810' }, // Shiba
       '#708090': { body: '#708090', ear: '#506070', snout: '#A0B0C0', eyes: '#2980B9' }, // Husky
       '#FF8C42': { body: '#FF8C42', ear: '#CC5500', snout: '#FFB380', eyes: '#27AE60' }, // Orange cat
+      '#E05A47': { body: '#E05A47', ear: '#B83A28', snout: '#FEE5D9', eyes: '#3D2B1F' }, // Orange cat (cozy terracotta)
       '#2C2C2C': { body: '#3C3C3C', ear: '#1A1A1A', snout: '#555', eyes: '#FFD700' }, // Black cat
       '#9B8EA1': { body: '#9B8EA1', ear: '#7B6E81', snout: '#BBB0C1', eyes: '#F39C12' }, // British
       '#A0522D': { body: '#A0522D', ear: '#80320D', snout: '#C0724D', eyes: '#27AE60' }, // Maine Coon
