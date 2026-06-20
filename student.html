@@ -318,22 +318,22 @@
         <div class="shop-selector-card" id="shopCard-clothes" onclick="selectShop('clothes')">
           <div class="shop-selector-icon">👗</div>
           <div class="shop-selector-name">Quần Áo</div>
-          <div class="shop-selector-count">50 loại</div>
+          <div class="shop-selector-count">200 loại</div>
         </div>
         <div class="shop-selector-card" id="shopCard-accessories" onclick="selectShop('accessories')">
           <div class="shop-selector-icon">💍</div>
           <div class="shop-selector-name">Phụ Kiện</div>
-          <div class="shop-selector-count">20 loại</div>
+          <div class="shop-selector-count">80 loại</div>
         </div>
         <div class="shop-selector-card" id="shopCard-furniture" onclick="selectShop('furniture')">
           <div class="shop-selector-icon">🛋️</div>
           <div class="shop-selector-name">Nội Thất</div>
-          <div class="shop-selector-count">20 loại</div>
+          <div class="shop-selector-count">100 loại</div>
         </div>
         <div class="shop-selector-card" id="shopCard-decor" onclick="selectShop('decor')">
           <div class="shop-selector-icon">🌸</div>
           <div class="shop-selector-name">Trang Trí</div>
-          <div class="shop-selector-count">15 loại</div>
+          <div class="shop-selector-count">60 loại</div>
         </div>
       </div>
 
@@ -1429,28 +1429,69 @@ function renderShop(shopId) {
   const ownedIds = inventory.map(i => i.id);
   const petsOwned = (currentStudent.pets || []).map(p => p.id);
 
-  // Filters for clothes and accessories
+  // Filters for clothes, accessories, and furniture
   const filterArea = document.getElementById('shopFilterArea');
   let filterHtml = '';
+  
   if (shopId === 'clothes' || shopId === 'accessories') {
     const genders = [
       { id: 'all', label: '🌟 Tất cả' },
       { id: 'male', label: '👦 Đồ Nam' },
       { id: 'female', label: '👧 Đồ Nữ' }
     ];
-    filterHtml += `<div class="gender-filter-row" style="display:flex; gap:6px; margin-bottom:8px;">` + 
+    filterHtml += `<div class="gender-filter-row" style="display:flex; gap:6px;">` + 
       genders.map(g => `<button class="shop-filter-btn ${shopGenderFilter === g.id ? 'active' : ''}" onclick="setShopGenderFilter('${g.id}')">${g.label}</button>`).join('') +
       `</div>`;
       
     if (shopId === 'clothes') {
-      const styles = ['casual', 'school', 'sport', 'formal', 'fantasy', 'seasonal'];
-      filterHtml += `<div class="style-filter-row" style="display:flex; gap:4px; overflow-x:auto; padding-bottom:4px;">` +
-        styles.map(s => `<button class="shop-filter-btn ${shopFilter === s ? 'active' : ''}" onclick="setShopFilter('${s}')">${s.charAt(0).toUpperCase()+s.slice(1)}</button>`).join('') +
+      const categories = [
+        { id: '', label: '🌟 Tất cả' },
+        { id: 'top', label: '👕 Áo' },
+        { id: 'bottom', label: '👖 Quần/Váy' },
+        { id: 'shoes', label: '👟 Giày' },
+        { id: 'head', label: '🧢 Mũ' }
+      ];
+      filterHtml += `<div class="category-filter-row" style="display:flex; gap:4px; overflow-x:auto; padding-bottom:4px; max-width:400px; justify-content:flex-end;">` +
+        categories.map(c => `<button class="shop-filter-btn ${shopFilter === c.id ? 'active' : ''}" onclick="setShopFilter('${c.id}')">${c.label}</button>`).join('') +
+        `</div>`;
+    } else if (shopId === 'accessories') {
+      const categories = [
+        { id: '', label: '🌟 Tất cả' },
+        { id: 'glasses', label: '👓 Kính' },
+        { id: 'neck', label: '🧣 Cổ/Vòng' },
+        { id: 'hair', label: '🎀 Tóc' },
+        { id: 'back', label: '🧚 Cánh/Túi' },
+        { id: 'hand', label: '☂️ Cầm tay' },
+        { id: 'face', label: '🎭 Mặt nạ' }
+      ];
+      filterHtml += `<div class="category-filter-row" style="display:flex; gap:4px; overflow-x:auto; padding-bottom:4px; max-width:400px; justify-content:flex-end;">` +
+        categories.map(c => `<button class="shop-filter-btn ${shopFilter === c.id ? 'active' : ''}" onclick="setShopFilter('${c.id}')">${c.label}</button>`).join('') +
         `</div>`;
     }
+  } else if (shopId === 'furniture') {
+    const rooms = [
+      { id: '', label: '🌟 Tất cả' },
+      { id: 'bedroom', label: '🛏️ Phòng ngủ' },
+      { id: 'living', label: '🛋️ Phòng khách' },
+      { id: 'kitchen', label: '🍳 Phòng bếp/ăn' },
+      { id: 'bathroom', label: '🚿 Phòng tắm/vệ sinh' }
+    ];
+    filterHtml += `<div class="room-filter-row" style="display:flex; gap:4px; overflow-x:auto; padding-bottom:4px; max-width:400px; justify-content:flex-end;">` +
+      rooms.map(r => `<button class="shop-filter-btn ${shopFilter === r.id ? 'active' : ''}" onclick="setShopFilter('${r.id}')">${r.label}</button>`).join('') +
+      `</div>`;
   }
-  filterArea.innerHTML = filterHtml;
 
+  if (filterHtml) {
+    filterArea.style.display = 'flex';
+    filterArea.style.flexDirection = 'column';
+    filterArea.style.alignItems = 'flex-end';
+    filterArea.style.gap = '6px';
+    filterArea.innerHTML = filterHtml;
+  } else {
+    filterArea.style.display = 'none';
+    filterArea.innerHTML = '';
+  }
+  
   let items = shop.items;
   if (shopId === 'clothes' || shopId === 'accessories') {
     if (shopGenderFilter === 'male') {
@@ -1459,7 +1500,22 @@ function renderShop(shopId) {
       items = items.filter(i => i.gender === 'female' || i.gender === 'all');
     }
   }
-  if (shopFilter && shopId === 'clothes') items = items.filter(i => i.style === shopFilter);
+  
+  if (shopFilter) {
+    if (shopId === 'clothes') {
+      items = items.filter(i => i.slot === shopFilter);
+    } else if (shopId === 'accessories') {
+      if (shopFilter === 'neck') {
+        items = items.filter(i => ['neck', 'chest', 'wrist', 'ring', 'ears'].includes(i.slot));
+      } else if (shopFilter === 'back') {
+        items = items.filter(i => ['back', 'bag'].includes(i.slot));
+      } else {
+        items = items.filter(i => i.slot === shopFilter);
+      }
+    } else if (shopId === 'furniture') {
+      items = items.filter(i => i.room === shopFilter);
+    }
+  }
 
   const grid = document.getElementById('shopItemsGrid');
   grid.innerHTML = items.map(item => {

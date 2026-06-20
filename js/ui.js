@@ -1570,7 +1570,16 @@ const UI = {
   },
 
   renderFurnitureSVG(itemId, width = "100%", height = "100%") {
-    const dims = this.ITEM_DIMENSIONS[itemId] || { w: 100, h: 100 };
+    let dims = this.ITEM_DIMENSIONS[itemId];
+    if (!dims) {
+      const item = GAME_DATA.shops.furniture.items.find(i => i.id === itemId) ||
+                   GAME_DATA.shops.decor.items.find(i => i.id === itemId);
+      if (item && item.w && item.h) {
+        dims = { w: item.w, h: item.h };
+      } else {
+        dims = { w: 100, h: 100 };
+      }
+    }
     let c = ''; // SVG markup content
 
     switch (itemId) {
@@ -2881,7 +2890,7 @@ const UI = {
         `;
         break;
 
-      case 'default':
+      default:
         // Fallback simple chest
         c = `<rect x="10" y="20" width="80" height="60" rx="5" fill="#D2B48C" stroke="#8B5A2B" stroke-width="3"/>
              <line x1="10" y1="45" x2="90" y2="45" stroke="#8B5A2B" stroke-width="3"/>

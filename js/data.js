@@ -341,7 +341,184 @@ const GAME_DATA = {
   }
 };
 
+// =============================================
+// DYNAMIC ITEM GENERATION TO MEET TARGET COUNTS
+// =============================================
+
+// Colors list for variety
+const topColors = [
+  { hex: '#A569BD', name: 'Tím Oải Hương', nameEn: 'Lavender' },
+  { hex: '#5DADE2', name: 'Xanh Lam Sáng', nameEn: 'Light Blue' },
+  { hex: '#48C9B0', name: 'Xanh Mint Đậm', nameEn: 'Teal' },
+  { hex: '#F4D03F', name: 'Vàng Chanh', nameEn: 'Lemon Yellow' },
+  { hex: '#EB984E', name: 'Cam Nắng', nameEn: 'Warm Orange' },
+  { hex: '#EC7063', name: 'Đỏ San Hô', nameEn: 'Coral Red' },
+  { hex: '#AF7AC5', name: 'Tím Phong Lan', nameEn: 'Orchid Purple' },
+  { hex: '#52BE80', name: 'Xanh Lá Nhạt', nameEn: 'Light Green' },
+  { hex: '#F5B041', name: 'Màu Mơ Chín', nameEn: 'Apricot' },
+  { hex: '#58D68D', name: 'Xanh Ngọc Lục', nameEn: 'Emerald' }
+];
+
+const stylesList = ['casual', 'school', 'sport', 'formal', 'fantasy', 'seasonal'];
+
+// 1. CLOTHING: Target 200 items (100 existing + 100 generated)
+// Generate 40 Tops
+for (let i = 1; i <= 40; i++) {
+  const colorObj = topColors[(i - 1) % topColors.length];
+  const style = stylesList[(i - 1) % stylesList.length];
+  GAME_DATA.shops.clothes.items.push({
+    id: `top_gen_${i}`,
+    name: `Cozy ${colorObj.nameEn} Top`,
+    nameVi: `Áo ${colorObj.name} (${style === 'casual' ? 'Thường' : style === 'school' ? 'Học Đường' : style === 'sport' ? 'Thể Thao' : style === 'formal' ? 'Lịch Lãm' : style === 'fantasy' ? 'Phép Thuật' : 'Lễ Hội'})`,
+    icon: '👕',
+    price: 150 + (i % 6) * 30,
+    slot: 'top',
+    style: style,
+    color: colorObj.hex,
+    gender: 'all'
+  });
+}
+
+// Generate 30 Bottoms
+for (let i = 1; i <= 30; i++) {
+  const colorObj = topColors[(i - 1) % topColors.length];
+  const style = stylesList[(i - 1) % stylesList.length];
+  GAME_DATA.shops.clothes.items.push({
+    id: `bot_gen_${i}`,
+    name: `Cozy ${colorObj.nameEn} Bottom`,
+    nameVi: `Quần/Váy ${colorObj.name} (${style === 'casual' ? 'Thường' : style === 'school' ? 'Học Đường' : style === 'sport' ? 'Thể Thao' : style === 'formal' ? 'Lịch Lãm' : style === 'fantasy' ? 'Phép Thuật' : 'Lễ Hội'})`,
+    icon: '👖',
+    price: 120 + (i % 5) * 40,
+    slot: 'bottom',
+    style: style,
+    color: colorObj.hex,
+    gender: 'all'
+  });
+}
+
+// Generate 20 Shoes
+for (let i = 1; i <= 20; i++) {
+  const colorObj = topColors[(i - 1) % topColors.length];
+  const style = stylesList[(i - 1) % stylesList.length];
+  GAME_DATA.shops.clothes.items.push({
+    id: `shoe_gen_${i}`,
+    name: `Cozy ${colorObj.nameEn} Shoes`,
+    nameVi: `Giày ${colorObj.name} (${style === 'casual' ? 'Thường' : style === 'school' ? 'Học Đường' : style === 'sport' ? 'Thể Thao' : style === 'formal' ? 'Lịch Lãm' : style === 'fantasy' ? 'Phép Thuật' : 'Lễ Hội'})`,
+    icon: '👟',
+    price: 180 + (i % 4) * 30,
+    slot: 'shoes',
+    style: style,
+    color: colorObj.hex,
+    gender: 'all'
+  });
+}
+
+// Generate 10 Head items
+for (let i = 1; i <= 10; i++) {
+  const colorObj = topColors[(i - 1) % topColors.length];
+  const style = stylesList[(i - 1) % stylesList.length];
+  GAME_DATA.shops.clothes.items.push({
+    id: `head_gen_${i}`,
+    name: `Cozy ${colorObj.nameEn} Hat`,
+    nameVi: `Mũ ${colorObj.name} (${style === 'casual' ? 'Thường' : style === 'school' ? 'Học Đường' : style === 'sport' ? 'Thể Thao' : style === 'formal' ? 'Lịch Lãm' : style === 'fantasy' ? 'Phép Thuật' : 'Lễ Hội'})`,
+    icon: '🧢',
+    price: 130 + (i % 3) * 50,
+    slot: 'head',
+    style: style,
+    color: colorObj.hex,
+    gender: 'all'
+  });
+}
+
+// 2. ACCESSORIES: Target 80 items (50 existing + 30 generated)
+const accSlotsList = [
+  { slot: 'glasses', icon: '👓', label: 'Kính Mắt' },
+  { slot: 'bag', icon: '🎒', label: 'Ba Lô' },
+  { slot: 'neck', icon: '🧣', label: 'Khăn Quàng' },
+  { slot: 'hair', icon: '🎀', label: 'Cài Tóc' },
+  { slot: 'back', icon: '🧚', label: 'Cánh Tiên' },
+  { slot: 'hand', icon: '☂️', label: 'Ô Cầm Tay' },
+  { slot: 'face', icon: '🎭', label: 'Mặt Nạ' }
+];
+
+for (let i = 1; i <= 30; i++) {
+  const slotObj = accSlotsList[(i - 1) % accSlotsList.length];
+  const colorObj = topColors[(i - 1) % topColors.length];
+  GAME_DATA.shops.accessories.items.push({
+    id: `acc_gen_${i}`,
+    name: `Special ${colorObj.nameEn} ${slotObj.slot}`,
+    nameVi: `${slotObj.label} ${colorObj.name}`,
+    icon: slotObj.icon,
+    price: 140 + (i % 5) * 40,
+    slot: slotObj.slot,
+    desc: `Phụ kiện làm đẹp màu ${colorObj.name.toLowerCase()}`,
+    gender: 'all'
+  });
+}
+
+// 3. FURNITURE: Target 100 items (50 existing + 50 generated)
+const furnitureRoomsList = [
+  { room: 'bedroom', label: 'Phòng Ngủ' },
+  { room: 'living', label: 'Phòng Khách' },
+  { room: 'kitchen', label: 'Phòng Bếp' },
+  { room: 'bathroom', label: 'Phòng Tắm' }
+];
+
+const furnitureTypesList = [
+  { nameEn: 'Sofa', nameVi: 'Ghế Sofa', icon: '🛋️', w: 80, h: 60 },
+  { nameEn: 'Table', nameVi: 'Bàn Trà Gỗ', icon: '🪑', w: 70, h: 45 },
+  { nameEn: 'Cabinet', nameVi: 'Tủ Đồ', icon: '🚪', w: 75, h: 90 },
+  { nameEn: 'Chair', nameVi: 'Ghế Bành', icon: '🪑', w: 50, h: 65 },
+  { nameEn: 'Shelf', nameVi: 'Kệ Trưng Bày', icon: '📚', w: 80, h: 100 },
+  { nameEn: 'Nightstand', nameVi: 'Kệ Đầu Giường', icon: '🪵', w: 45, h: 50 }
+];
+
+for (let i = 1; i <= 50; i++) {
+  const roomObj = furnitureRoomsList[(i - 1) % furnitureRoomsList.length];
+  const typeObj = furnitureTypesList[(i - 1) % furnitureTypesList.length];
+  const colorObj = topColors[(i - 1) % topColors.length];
+  
+  GAME_DATA.shops.furniture.items.push({
+    id: `fur_gen_${i}`,
+    name: `${colorObj.nameEn} ${roomObj.room} ${typeObj.nameEn}`,
+    nameVi: `${typeObj.nameVi} ${colorObj.name} (${roomObj.label})`,
+    icon: typeObj.icon,
+    price: 220 + (i % 6) * 50,
+    room: roomObj.room,
+    desc: `Món đồ nội thất sơn màu ${colorObj.name.toLowerCase()} cho căn phòng của bạn`,
+    w: typeObj.w,
+    h: typeObj.h
+  });
+}
+
+// 4. DECOR: Target 60 items (40 existing + 20 generated)
+const decorTypesList = [
+  { nameEn: 'Painting', nameVi: 'Tranh Treo Tường', icon: '🖼️', w: 60, h: 45 },
+  { nameEn: 'Flower Vase', nameVi: 'Lọ Hoa Cảnh', icon: '💐', w: 35, h: 50 },
+  { nameEn: 'Soft Rug', nameVi: 'Thảm Êm', icon: '🪣', w: 65, h: 30 },
+  { nameEn: 'Clock', nameVi: 'Đồng Hồ Cổ Điển', icon: '🕰️', w: 40, h: 40 },
+  { nameEn: 'Plant Pot', nameVi: 'Chậu Cây Nhỏ', icon: '🪴', w: 30, h: 40 },
+  { nameEn: 'Candle', nameVi: 'Nến Thơm', icon: '🕯️', w: 25, h: 35 }
+];
+
+for (let i = 1; i <= 20; i++) {
+  const typeObj = decorTypesList[(i - 1) % decorTypesList.length];
+  const colorObj = topColors[(i - 1) % topColors.length];
+  
+  GAME_DATA.shops.decor.items.push({
+    id: `dec_gen_${i}`,
+    name: `${colorObj.nameEn} ${typeObj.nameEn}`,
+    nameVi: `${typeObj.nameVi} ${colorObj.name}`,
+    icon: typeObj.icon,
+    price: 90 + (i % 4) * 30,
+    desc: `Đồ trang trí màu ${colorObj.name.toLowerCase()} giúp ngôi nhà xinh xắn hơn`,
+    w: typeObj.w,
+    h: typeObj.h
+  });
+}
+
 // Populate pet shop items from pets data
+
 GAME_DATA.shops.pets.items = [
   ...GAME_DATA.pets.dogs.map(p => ({ ...p, desc: `${p.nameVi} dễ thương` })),
   ...GAME_DATA.pets.cats.map(p => ({ ...p, desc: `${p.nameVi} đáng yêu` }))
