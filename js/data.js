@@ -451,6 +451,7 @@ for (let i = 1; i <= 30; i++) {
     icon: slotObj.icon,
     price: 140 + (i % 5) * 40,
     slot: slotObj.slot,
+    color: colorObj.hex,
     desc: `Phụ kiện làm đẹp màu ${colorObj.name.toLowerCase()}`,
     gender: 'all'
   });
@@ -485,6 +486,7 @@ for (let i = 1; i <= 50; i++) {
     icon: typeObj.icon,
     price: 220 + (i % 6) * 50,
     room: roomObj.room,
+    color: colorObj.hex,
     desc: `Món đồ nội thất sơn màu ${colorObj.name.toLowerCase()} cho căn phòng của bạn`,
     w: typeObj.w,
     h: typeObj.h
@@ -511,6 +513,7 @@ for (let i = 1; i <= 20; i++) {
     nameVi: `${typeObj.nameVi} ${colorObj.name}`,
     icon: typeObj.icon,
     price: 90 + (i % 4) * 30,
+    color: colorObj.hex,
     desc: `Đồ trang trí màu ${colorObj.name.toLowerCase()} giúp ngôi nhà xinh xắn hơn`,
     w: typeObj.w,
     h: typeObj.h
