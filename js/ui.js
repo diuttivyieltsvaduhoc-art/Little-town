@@ -985,7 +985,7 @@ const UI = {
     }
     
     return acc;
-  }
+  },
 
   renderHair(gender, styleId, hairColor) {
     if (gender === 'male') {
