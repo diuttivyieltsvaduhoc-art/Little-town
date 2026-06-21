@@ -4,6 +4,24 @@
 // =============================================
 
 const UI = {
+  getHairClipY(headId) {
+    if (!headId) return 15;
+    if (headId === 'head_cap_red' || headId.startsWith('head_gen_')) return 17;
+    if (headId === 'head_beanie') return 20;
+    if (headId === 'head_graduation') return 14;
+    if (headId === 'head_witch') return 22;
+    if (headId === 'head_straw_hat') return 24;
+    if (headId === 'head_chef_hat') return 18;
+    return 15;
+  },
+
+  getAccessoryColor(id, defaultColor = '#3498DB') {
+    if (!id) return defaultColor;
+    if (typeof GAME_DATA === 'undefined' || !GAME_DATA.shops) return defaultColor;
+    const item = GAME_DATA.shops.accessories.items.find(i => i.id === id);
+    return item?.color || defaultColor;
+  },
+
   // ---- CHARACTER RENDERING ----
   renderCharacter(gender, styleId, outfit, size = 80, animate = true) {
     const style = CHARACTER_STYLES[gender]?.find(s => s.id === styleId) || CHARACTER_STYLES[gender]?.[0];
@@ -24,6 +42,11 @@ const UI = {
           <clipPath id="hood-face-clip">
             <rect x="18" y="9" width="44" height="48" rx="5"/>
           </clipPath>
+          ${outfit && outfit.head ? `
+          <clipPath id="hat-hair-clip-${outfit.head}">
+            <rect x="15" y="${this.getHairClipY(outfit.head)}" width="50" height="50" rx="2"/>
+          </clipPath>
+          ` : ''}
         </defs>
         <!-- Shadow -->
         <ellipse cx="40" cy="98" rx="15" ry="3" fill="rgba(0,0,0,0.2)"/>
@@ -68,7 +91,11 @@ const UI = {
           <g clip-path="url(#hood-face-clip)">
             ${this.renderHair(gender, styleId, hairColor)}
           </g>
-        ` : this.renderHair(gender, styleId, hairColor)}
+        ` : (['head_earmuffs', 'head_ribbon_band', 'head_crown', 'head_crown_ice'].includes(outfit.head) ? this.renderHair(gender, styleId, hairColor) : `
+          <g clip-path="url(#hat-hair-clip-${outfit.head})">
+            ${this.renderHair(gender, styleId, hairColor)}
+          </g>
+        `)}
         
         <!-- Cute Flat Eyebrows -->
         <path d="M29 18 Q33 16.5 37 18" stroke="#3D2B1F" stroke-width="1" fill="none" stroke-linecap="round" opacity="0.4"/>
@@ -141,6 +168,11 @@ const UI = {
       svg += `<!-- Toy Guitar on back -->
               <path d="M15 75 L30 55 L26 52 L12 72 Z" fill="#D2691E" stroke="#5D4037" stroke-width="1"/>
               <line x1="28" y1="53" x2="48" y2="30" stroke="#7F8C8D" stroke-width="1.5"/>`;
+    } else if (outfit.back && outfit.back.startsWith('acc_gen_')) {
+      const color = this.getAccessoryColor(outfit.back, '#AED6F1');
+      svg += `<!-- Fallback Wings -->
+              <path d="M28 45 Q5 15 15 50 Q5 70 28 60 Z" fill="${color}" stroke="${color}" stroke-dasharray="1 1" stroke-width="1" opacity="0.6"/>
+              <path d="M52 45 Q75 15 65 50 Q75 70 52 60 Z" fill="${color}" stroke="${color}" stroke-dasharray="1 1" stroke-width="1" opacity="0.6"/>`;
     }
     return svg;
   },
@@ -674,6 +706,27 @@ const UI = {
               <path d="M22 18 Q40 4 58 18" stroke="#E74C3C" stroke-width="2.5" fill="none"/>
               <!-- Red Ribbon Bow -->
               <path d="M38 4 Q30 -2 34 1 Q38 4 40 6 Q42 4 46 1 Q50 -2 42 4 Z" fill="#E74C3C"/>`;
+    } else if (id === 'head_crown') {
+      // Golden Crown
+      return `<!-- Golden Crown -->
+              <polygon points="22,18 25,6 31,12 40,1 49,12 55,6 58,18" fill="#FFD700" stroke="#DAA520" stroke-width="1.2"/>
+              <circle cx="25" cy="6" r="1.5" fill="#E74C3C"/>
+              <circle cx="40" cy="1" r="1.5" fill="#3498DB"/>
+              <circle cx="55" cy="6" r="1.5" fill="#E74C3C"/>
+              <circle cx="40" cy="11" r="2.2" fill="#E74C3C"/>`;
+    } else if (id.startsWith('head_')) {
+      // Generic cap fallback using item color from GAME_DATA
+      const headItem = GAME_DATA.shops.clothes.items.find(i => i.id === id) ||
+                       GAME_DATA.shops.accessories.items.find(i => i.id === id);
+      const color = headItem?.color || '#3498DB';
+      return `<!-- Fallback Cap -->
+              <path d="M22 18 Q22 4 40 4 Q58 4 58 18 Z" fill="${color}"/>
+              <!-- Visor/Brim -->
+              <path d="M35 15 L62 13 L60 18 L35 18 Z" fill="${color}"/>
+              <path d="M35 15 L62 13 L60 18 L35 18 Z" fill="rgba(0,0,0,0.15)"/>
+              <!-- Button on top -->
+              <circle cx="40" cy="4" r="2" fill="${color}"/>
+              <circle cx="40" cy="4" r="2" fill="rgba(0,0,0,0.1)"/>`;
     }
     return '';
   },
@@ -713,6 +766,14 @@ const UI = {
       acc += `<!-- Star Glasses -->
               <polygon points="32,18 34,22 38,22 35,24 36,28 32,26 28,28 29,24 26,22 30,22" fill="none" stroke="#F1C40F" stroke-width="1.5"/>
               <polygon points="48,18 50,22 54,22 51,24 52,28 48,26 44,28 45,24 42,22 46,22" fill="none" stroke="#F1C40F" stroke-width="1.5"/>`;
+    } else if (outfit.glasses && outfit.glasses.startsWith('acc_gen_')) {
+      const color = this.getAccessoryColor(outfit.glasses, '#2C3E50');
+      acc += `<!-- Fallback Glasses -->
+              <circle cx="34" cy="24" r="6" fill="none" stroke="${color}" stroke-width="2"/>
+              <circle cx="46" cy="24" r="6" fill="none" stroke="${color}" stroke-width="2"/>
+              <line x1="40" y1="24" x2="40" y2="24" stroke="${color}" stroke-width="2"/>
+              <line x1="28" y1="24" x2="22" y2="22" stroke="${color}" stroke-width="1"/>
+              <line x1="52" y1="24" x2="58" y2="22" stroke="${color}" stroke-width="1"/>`;
     }
     
     // Scarf & Neck
@@ -749,6 +810,11 @@ const UI = {
     } else if (outfit.neck === 'acc_bow_tie') {
       acc += `<!-- Bow Tie -->
               <polygon points="36,40 44,40 40,43" fill="#34495E"/>`;
+    } else if (outfit.neck && outfit.neck.startsWith('acc_gen_')) {
+      const color = this.getAccessoryColor(outfit.neck, '#E74C3C');
+      acc += `<!-- Fallback Scarf -->
+              <rect x="28" y="38" width="24" height="6" rx="3" fill="${color}"/>
+              <path d="M44 42 L48 54 Q48 58 45 58 Q42 58 42 54 Z" fill="${color}"/>`;
     }
     
     // Badge & Chest
@@ -797,6 +863,11 @@ const UI = {
       acc += `<!-- Hair ears headband -->
               <path d="M23 15 Q40 3 57 15" stroke="#333" stroke-width="2" fill="none"/>
               ${headShape}`;
+    } else if (outfit.hair && outfit.hair.startsWith('acc_gen_')) {
+      const color = this.getAccessoryColor(outfit.hair, '#FF69B4');
+      acc += `<!-- Fallback Bow -->
+              <path d="M30 6 L50 6 L48 12 L32 12 Z" fill="${color}"/>
+              <circle cx="40" cy="9" r="3" fill="#FFF" opacity="0.9"/>`;
     }
     
     // Backpacks / Bags
@@ -819,6 +890,11 @@ const UI = {
               <line x1="28" y1="42" x2="62" y2="68" stroke="#5D4037" stroke-width="1.5"/>
               <!-- Crossbody bag body -->
               <rect x="56" y="62" width="10" height="9" rx="2" fill="#CD853F" stroke="#8B5A2B" stroke-width="1"/>`;
+    } else if (outfit.bag && outfit.bag.startsWith('acc_gen_')) {
+      const color = this.getAccessoryColor(outfit.bag, '#FF4757');
+      acc += `<!-- Fallback Bag Straps -->
+              <rect x="27" y="44" width="4" height="16" rx="1" fill="${color}"/>
+              <rect x="49" y="44" width="4" height="16" rx="1" fill="${color}"/>`;
     }
     
     // Wrist & Rings
@@ -870,6 +946,13 @@ const UI = {
       acc += `<!-- Magic Wand -->
               <line x1="60" y1="72" x2="60" y2="50" stroke="#8B5A2B" stroke-width="2" class="char-arm-r"/>
               <polygon points="60,45 62,49 66,49 63,51 64,55 60,53 56,55 57,51 54,49 58,49" fill="#FFD700" class="char-arm-r"/>`;
+    } else if (outfit.hand && outfit.hand.startsWith('acc_gen_')) {
+      const color = this.getAccessoryColor(outfit.hand, '#9C27B0');
+      acc += `<!-- Fallback Umbrella handle -->
+              <line x1="60" y1="67" x2="60" y2="85" stroke="#795548" stroke-width="1.5" class="char-arm-r"/>
+              <path d="M58 85 Q60 88 62 85" fill="none" stroke="#795548" stroke-width="1.5" class="char-arm-r"/>
+              <!-- Fallback Umbrella canopy (closed) -->
+              <path d="M57 35 L63 35 L61 67 L59 67 Z" fill="${color}" class="char-arm-r"/>`;
     }
     
     // Face & Masks
@@ -893,10 +976,16 @@ const UI = {
               <!-- eye dots -->
               <circle cx="34" cy="25" r="1.5" fill="#333"/>
               <circle cx="46" cy="25" r="1.5" fill="#333"/>`;
+    } else if (outfit.face && outfit.face.startsWith('acc_gen_')) {
+      const color = this.getAccessoryColor(outfit.face, '#E74C3C');
+      acc += `<!-- Fallback Mask -->
+              <path d="M28 22 Q40 28 52 22 L50 28 Q40 32 30 28 Z" fill="${color}"/>
+              <circle cx="34" cy="24" r="2.5" fill="white"/>
+              <circle cx="46" cy="24" r="2.5" fill="white"/>`;
     }
     
     return acc;
-  },
+  }
 
   renderHair(gender, styleId, hairColor) {
     if (gender === 'male') {
@@ -1580,6 +1669,95 @@ const UI = {
         dims = { w: 100, h: 100 };
       }
     }
+
+    // Fallbacks for generated furniture and decor
+    if (itemId.startsWith('fur_gen_') || itemId.startsWith('dec_gen_')) {
+      let gc = '';
+      if (itemId.startsWith('fur_gen_')) {
+        const idx = parseInt(itemId.replace('fur_gen_', ''));
+        const typeIndex = (idx - 1) % 6;
+        const item = GAME_DATA.shops.furniture.items.find(i => i.id === itemId);
+        const color = item?.color || '#D35400';
+        
+        if (typeIndex === 0) { // Sofa: w=80, h=60
+          gc = `<!-- Generated Sofa -->
+               <rect x="5" y="40" width="70" height="15" rx="2" fill="${color}" opacity="0.9" stroke="rgba(0,0,0,0.15)" stroke-width="1.5"/>
+               <rect x="5" y="15" width="70" height="28" rx="5" fill="${color}" stroke="rgba(0,0,0,0.15)" stroke-width="1.5"/>
+               <rect x="0" y="30" width="10" height="25" rx="3" fill="${color}" stroke="rgba(0,0,0,0.15)" stroke-width="1.5"/>
+               <rect x="70" y="30" width="10" height="25" rx="3" fill="${color}" stroke="rgba(0,0,0,0.15)" stroke-width="1.5"/>`;
+        } else if (typeIndex === 1) { // Table: w=70, h=45
+          gc = `<!-- Generated Table -->
+               <rect x="10" y="20" width="6" height="22" fill="#5C3A21"/>
+               <rect x="54" y="20" width="6" height="22" fill="#5C3A21"/>
+               <rect x="5" y="12" width="60" height="8" rx="2" fill="${color}" stroke="rgba(0,0,0,0.15)" stroke-width="1.5"/>`;
+        } else if (typeIndex === 2) { // Cabinet: w=75, h=90
+          gc = `<!-- Generated Cabinet -->
+               <rect x="5" y="5" width="65" height="80" rx="4" fill="${color}" stroke="rgba(0,0,0,0.2)" stroke-width="2"/>
+               <rect x="10" y="10" width="25" height="70" fill="rgba(255,255,255,0.1)" stroke="rgba(0,0,0,0.1)" stroke-width="1"/>
+               <rect x="40" y="10" width="25" height="70" fill="rgba(255,255,255,0.1)" stroke="rgba(0,0,0,0.1)" stroke-width="1"/>
+               <circle cx="31" cy="45" r="2" fill="#FFD700"/>
+               <circle cx="44" cy="45" r="2" fill="#FFD700"/>`;
+        } else if (typeIndex === 3) { // Chair: w=50, h=65
+          gc = `<!-- Generated Chair -->
+               <rect x="10" y="38" width="30" height="10" rx="2" fill="${color}" stroke="rgba(0,0,0,0.15)" stroke-width="1"/>
+               <rect x="10" y="15" width="30" height="25" rx="4" fill="${color}" stroke="rgba(0,0,0,0.15)" stroke-width="1"/>
+               <rect x="12" y="48" width="4" height="15" fill="#5C3A21"/>
+               <rect x="34" y="48" width="4" height="15" fill="#5C3A21"/>`;
+        } else if (typeIndex === 4) { // Shelf: w=80, h=100
+          gc = `<!-- Generated Shelf -->
+               <rect x="5" y="5" width="70" height="90" rx="3" fill="${color}" stroke="rgba(0,0,0,0.2)" stroke-width="2"/>
+               <line x1="5" y1="35" x2="75" y2="35" stroke="rgba(0,0,0,0.2)" stroke-width="2"/>
+               <line x1="5" y1="65" x2="75" y2="65" stroke="rgba(0,0,0,0.2)" stroke-width="2"/>`;
+        } else if (typeIndex === 5) { // Nightstand: w=45, h=50
+          gc = `<!-- Generated Nightstand -->
+               <rect x="4" y="4" width="37" height="42" rx="3" fill="${color}" stroke="rgba(0,0,0,0.15)" stroke-width="1.5"/>
+               <rect x="8" y="10" width="29" height="12" rx="1" fill="rgba(255,255,255,0.15)" stroke="rgba(0,0,0,0.1)" stroke-width="1"/>
+               <rect x="8" y="26" width="29" height="12" rx="1" fill="rgba(255,255,255,0.15)" stroke="rgba(0,0,0,0.1)" stroke-width="1"/>
+               <circle cx="22.5" cy="16" r="1.5" fill="#FFD700"/>
+               <circle cx="22.5" cy="32" r="1.5" fill="#FFD700"/>`;
+        }
+      } else if (itemId.startsWith('dec_gen_')) {
+        const idx = parseInt(itemId.replace('dec_gen_', ''));
+        const typeIndex = (idx - 1) % 6;
+        const item = GAME_DATA.shops.decor.items.find(i => i.id === itemId);
+        const color = item?.color || '#3498DB';
+        
+        if (typeIndex === 0) { // Painting: w=60, h=45
+          gc = `<!-- Generated Painting -->
+               <rect x="5" y="5" width="50" height="35" fill="${color}" stroke="#8B5A2B" stroke-width="3" rx="1"/>
+               <circle cx="30" cy="20" r="8" fill="#FFFACD" opacity="0.8"/>
+               <polygon points="10,32 25,22 40,32" fill="#E67E22" opacity="0.9"/>`;
+        } else if (typeIndex === 1) { // Flower Vase: w=35, h=50
+          gc = `<!-- Generated Flower Vase -->
+               <path d="M12 25 L23 25 L20 45 L15 45 Z" fill="${color}" stroke="rgba(0,0,0,0.1)" stroke-width="1"/>
+               <path d="M17 12 Q20 2 24 16" fill="none" stroke="#2ECC71" stroke-width="1.5"/>
+               <path d="M17 12 Q12 4 11 18" fill="none" stroke="#2ECC71" stroke-width="1.5"/>
+               <circle cx="24" cy="16" r="4.5" fill="#E74C3C"/>
+               <circle cx="11" cy="18" r="4.5" fill="#F1C40F"/>`;
+        } else if (typeIndex === 2) { // Soft Rug: w=65, h=30
+          gc = `<!-- Generated Rug -->
+               <ellipse cx="32" cy="15" rx="30" ry="12" fill="${color}" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" stroke-dasharray="3 2"/>`;
+        } else if (typeIndex === 3) { // Clock: w=40, h=40
+          gc = `<!-- Generated Clock -->
+               <circle cx="20" cy="20" r="18" fill="${color}" stroke="rgba(0,0,0,0.15)" stroke-width="1.5"/>
+               <circle cx="20" cy="20" r="14" fill="#FFF"/>
+               <line x1="20" y1="20" x2="20" y2="10" stroke="#333" stroke-width="1.5" stroke-linecap="round"/>
+               <line x1="20" y1="20" x2="26" y2="20" stroke="#333" stroke-width="1" stroke-linecap="round"/>`;
+        } else if (typeIndex === 4) { // Plant Pot: w=30, h=40
+          gc = `<!-- Generated Plant Pot -->
+               <rect x="8" y="25" width="14" height="12" fill="#D35400" rx="1"/>
+               <path d="M15 25 Q15 5 8 8" fill="none" stroke="${color}" stroke-width="3" stroke-linecap="round"/>
+               <path d="M15 25 Q20 8 22 12" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round"/>`;
+        } else if (typeIndex === 5) { // Candle: w=25, h=35
+          gc = `<!-- Generated Candle -->
+               <rect x="7" y="12" width="11" height="20" fill="${color}" rx="1"/>
+               <line x1="12.5" y1="12" x2="12.5" y2="8" stroke="#333" stroke-width="1"/>
+               <path d="M12.5 8 Q15 4 12.5 1 Q10 4 12.5 8" fill="#F39C12"/>`;
+        }
+      }
+      return `<svg viewBox="0 0 ${dims.w} ${dims.h}" width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg" style="display:block;overflow:visible;">${gc}</svg>`;
+    }
+
     let c = ''; // SVG markup content
 
     switch (itemId) {
