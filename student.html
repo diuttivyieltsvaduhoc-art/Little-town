@@ -545,6 +545,42 @@
   </div>
 </div>
 
+<!-- Communal House Modal -->
+<div class="modal-overlay" id="communalHouseModal">
+  <div class="modal glass" style="max-width:700px; width:95vw;">
+    <div class="modal-header">
+      <div class="modal-title" style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size: 1.5rem;">🏛️</span>
+        <div>
+          <div style="font-weight:800; font-size:1.15rem;">Nhà Chung Lớp Học</div>
+          <div id="communalClassSubtitle" style="font-size:0.75rem; color:var(--text-muted); font-weight:normal;">Bảng tin lớp học</div>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm btn-icon" onclick="closeModal('communalHouseModal')">✕</button>
+    </div>
+    <div class="modal-body" style="display:flex; flex-direction:column; gap:16px;">
+      <!-- Post message area -->
+      <div class="glass-light" style="padding:16px; border:1px solid var(--border); display:flex; flex-direction:column; gap:12px;">
+        <div style="display:flex; gap:12px; align-items:flex-start;">
+          <div id="communalUserAvatar" style="width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg, var(--primary), var(--secondary)); display:flex; align-items:center; justify-content:center; font-size:1.2rem; flex-shrink:0;">👤</div>
+          <textarea class="input" id="communalPostInput" placeholder="Viết bài viết mới hoặc để lại lời nhắn... ✍️" rows="3" style="resize:none; background:rgba(0,0,0,0.15); border-color:var(--border-light); font-size:0.9rem; flex-grow:1;"></textarea>
+        </div>
+        <div style="display:flex; justify-content:flex-end;">
+          <button class="btn btn-accent btn-sm" onclick="submitNewMessage()" style="padding: 8px 16px;">🚀 Đăng bài</button>
+        </div>
+      </div>
+      
+      <!-- Messages timeline scrollbox -->
+      <div id="communalMessagesContainer" style="max-height:400px; overflow-y:auto; display:flex; flex-direction:column; gap:12px; padding-right:4px;">
+        <!-- Dynamically rendered -->
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('communalHouseModal')">Đóng</button>
+    </div>
+  </div>
+</div>
+
 <!-- Visit House Modal -->
 <div class="visit-overlay" id="visitOverlay">
   <div class="glass visit-card" style="max-width:700px;max-height:90vh;overflow-y:auto;">
@@ -562,11 +598,11 @@
 <!-- Toast -->
 <div id="toast-container"></div>
 
-<script src="js/audio.js?v=9"></script>
-<script src="js/data.js?v=9"></script>
-<script src="js/sync.js?v=9"></script>
-<script src="js/auth.js?v=9"></script>
-<script src="js/ui.js?v=9"></script>
+<script src="js/audio.js?v=10"></script>
+<script src="js/data.js?v=10"></script>
+<script src="js/sync.js?v=10"></script>
+<script src="js/auth.js?v=10"></script>
+<script src="js/ui.js?v=10"></script>
 <script>
 // ============================================
 // LITTLE TOWN - STUDENT.JS (inline)
@@ -678,6 +714,9 @@ function startPolling() {
           renderOutfitPanel();
           renderInventory();
           renderStreet();
+          if (document.getElementById('communalHouseModal') && document.getElementById('communalHouseModal').classList.contains('active')) {
+            renderCommunalMessages();
+          }
         }
       }
     }
@@ -1386,13 +1425,23 @@ function renderStreet() {
   const students = DB.getStudents().filter(s => s.classId === currentStudent.classId);
   const row = document.getElementById('housesRow');
 
-  row.innerHTML = students.map(s => `
+  let html = `
+    <div class="house-wrapper" onclick="openCommunalHouseModal()" style="transform: scale(1.05); filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));">
+      ${UI.renderCommunalHouse(105)}
+      <div class="house-name-tag" style="border-color:var(--accent);color:var(--accent);font-weight:900;">🏛️ Nhà Chung</div>
+      <div class="house-pts-tag" style="background:var(--accent);color:#000;font-weight:bold;">Bản tin lớp</div>
+    </div>
+  `;
+
+  html += students.map(s => `
     <div class="house-wrapper" onclick="${s.id !== currentStudent.id ? `visitHouse('${s.id}')` : 'showToast("Đây là nhà của bạn! 🏠", "info")'}">
       ${UI.renderHouseFront(s, 90)}
       <div class="house-name-tag" style="${s.id === currentStudent.id ? 'border-color:var(--accent);color:var(--accent)' : ''}">${s.id === currentStudent.id ? '🏠' : ''} ${escapeHTML(s.name)}</div>
       <div class="house-pts-tag">⭐${s.points || 0}</div>
     </div>
   `).join('');
+
+  row.innerHTML = html;
 
   // Walking character on street
   const walkEl = document.getElementById('streetWalkChar');
@@ -2080,6 +2129,198 @@ function finishSetup() {
   renderHome();
   renderStreet();
   renderShop('pets');
+}
+
+// ============================================
+// COMMUNAL HOUSE (NHÀ CHUNG)
+// ============================================
+function openCommunalHouseModal() {
+  currentStudent = AUTH.getCurrentStudent();
+  const cls = DB.getClasses().find(c => c.id === currentStudent.classId);
+  document.getElementById('communalClassSubtitle').textContent = 'Con phố ' + (cls?.name || 'lớp học') + ' • Bản tin và thảo luận';
+  
+  // Render user avatar in input area
+  const userAvatarEl = document.getElementById('communalUserAvatar');
+  if (userAvatarEl) {
+    userAvatarEl.innerHTML = currentStudent.gender === 'boy' ? '👦' : '👧';
+  }
+  
+  // Clean input
+  document.getElementById('communalPostInput').value = '';
+  
+  // Render messages
+  renderCommunalMessages();
+  
+  openModal('communalHouseModal');
+}
+
+function renderCommunalMessages() {
+  currentStudent = AUTH.getCurrentStudent();
+  const messages = DB.getMessagesForClass(currentStudent.classId);
+  const container = document.getElementById('communalMessagesContainer');
+  
+  if (messages.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">🏛️</div>
+        <div class="empty-state-text">Nhà Chung chưa có tin nhắn nào.<br>Hãy là người đầu tiên chia sẻ lời nhắn!</div>
+      </div>
+    `;
+    return;
+  }
+  
+  // Sort messages descending by timestamp
+  messages.sort((a, b) => b.timestamp - a.timestamp);
+  
+  let html = '';
+  messages.forEach(msg => {
+    const isTeacher = msg.authorRole === 'teacher';
+    const isOwnMsg = msg.authorId === currentStudent.id;
+    
+    // Style differently for teacher posts
+    const borderStyle = isTeacher ? 'border: 2.5px solid var(--warm); background: rgba(247,151,30,0.08);' : '';
+    const nameColor = isTeacher ? 'color: var(--warm-light);' : 'color: var(--primary-light);';
+    const badgeHtml = isTeacher 
+      ? `<span class="badge badge-warm" style="font-size:0.75rem; padding: 2px 8px;">📢 Giáo Viên</span>` 
+      : `<span class="badge badge-primary" style="font-size:0.75rem; padding: 2px 8px;">Học Sinh</span>`;
+      
+    const formattedTime = new Date(msg.timestamp).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
+    const escapedContent = escapeHTML(msg.content).replace(/\n/g, '<br>');
+    
+    // Render delete button if it's the student's own message
+    const deleteBtn = isOwnMsg 
+      ? `<button class="btn btn-ghost btn-sm" onclick="deleteOwnMessage('${msg.id}')" style="padding:4px 10px; font-size:0.75rem; border-color:rgba(255,101,132,0.4); color:var(--secondary); height:auto; min-height:unset;">Xóa</button>` 
+      : '';
+      
+    // Replies HTML
+    let repliesHtml = '';
+    const replies = msg.replies || [];
+    // Sort replies ascending by timestamp
+    replies.sort((a, b) => a.timestamp - b.timestamp);
+    
+    if (replies.length > 0) {
+      repliesHtml = `
+        <div style="margin-top:12px; padding-left:16px; border-left: 2px solid var(--border-light); display:flex; flex-direction:column; gap:8px;">
+          ${replies.map(r => {
+            const isRepTeacher = r.authorRole === 'teacher';
+            const isOwnRep = r.authorId === currentStudent.id;
+            const repNameColor = isRepTeacher ? 'color: var(--warm-light); font-weight: 800;' : 'color: var(--primary-light); font-weight: 700;';
+            const repBadgeHtml = isRepTeacher 
+              ? `<span class="badge badge-warm" style="font-size:0.65rem; padding: 1px 5px; transform: scale(0.9); margin-left: 4px;">GV</span>` 
+              : ``;
+            const formattedRepTime = new Date(r.timestamp).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' });
+            const escapedRepContent = escapeHTML(r.content).replace(/\n/g, '<br>');
+            const repDeleteBtn = isOwnRep 
+              ? `<button class="btn btn-ghost btn-icon" onclick="deleteOwnReply('${msg.id}', '${r.id}')" style="width:20px; height:20px; font-size:0.65rem; border:none; color:var(--secondary); padding:0; display:inline-flex; align-items:center; justify-content:center;">✕</button>` 
+              : '';
+              
+            return `
+              <div style="background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: var(--radius-sm); font-size:0.85rem; position:relative; border: 1px solid var(--border-light);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                  <div style="display:flex; align-items:center; gap:6px;">
+                    <span style="${repNameColor}">${escapeHTML(r.authorName)}</span>
+                    ${repBadgeHtml}
+                    <span style="font-size:0.7rem; color:var(--text-muted);">${formattedRepTime}</span>
+                  </div>
+                  <div style="margin-left: auto;">
+                    ${repDeleteBtn}
+                  </div>
+                </div>
+                <div style="color:var(--text-white); word-break:break-word; line-height: 1.4;">${escapedRepContent}</div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+    
+    html += `
+      <div class="glass-light fade-in" style="padding:16px; border-radius:var(--radius); border-color:var(--border-light); ${borderStyle}">
+        <!-- Author info & timestamp -->
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div style="width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:center; font-size: 1.1rem; border: 1.5px solid var(--border-light);">
+              ${isTeacher ? '👨‍🏫' : '👤'}
+            </div>
+            <div>
+              <div style="display:flex; align-items:center; gap:6px;">
+                <strong style="${nameColor} font-size:0.95rem;">${escapeHTML(msg.authorName)}</strong>
+                ${badgeHtml}
+              </div>
+              <div style="font-size:0.72rem; color:var(--text-muted);">${formattedTime}</div>
+            </div>
+          </div>
+          ${deleteBtn}
+        </div>
+        
+        <!-- Post content -->
+        <div style="font-size:0.92rem; color:var(--text-white); margin-bottom:12px; word-break:break-word; line-height:1.5; padding-left: 2px;">
+          ${escapedContent}
+        </div>
+        
+        <div class="divider" style="margin: 10px 0; opacity: 0.5;"></div>
+        
+        <!-- Replies list -->
+        ${repliesHtml}
+        
+        <!-- Add Reply Form -->
+        <div style="display:flex; gap:8px; margin-top:12px; align-items:center;">
+          <input type="text" class="input" placeholder="Viết bình luận hoặc phản hồi..." id="replyInput_${msg.id}" style="padding: 8px 12px; font-size:0.85rem; flex-grow:1; background:rgba(0,0,0,0.25); border-color:var(--border-light); border-radius:var(--radius-sm);" onkeydown="if(event.key === 'Enter') submitReply('${msg.id}')">
+          <button class="btn btn-accent btn-sm" onclick="submitReply('${msg.id}')" style="padding:8px 16px; font-size:0.8rem; border-radius:var(--radius-sm); height:34px; font-weight:bold;">Phản hồi</button>
+        </div>
+      </div>
+    `;
+  });
+  
+  container.innerHTML = html;
+}
+
+function submitNewMessage() {
+  currentStudent = AUTH.getCurrentStudent();
+  const input = document.getElementById('communalPostInput');
+  const content = input.value.trim();
+  
+  if (!content) {
+    showToast('Vui lòng nhập nội dung lời nhắn! ✍️', 'error');
+    return;
+  }
+  
+  DB.addMessage(currentStudent.classId, currentStudent.id, currentStudent.name, 'student', content);
+  input.value = '';
+  showToast('Đã đăng lời nhắn lên Nhà Chung! 🏛️', 'success');
+  renderCommunalMessages();
+}
+
+function submitReply(messageId) {
+  currentStudent = AUTH.getCurrentStudent();
+  const input = document.getElementById('replyInput_' + messageId);
+  const content = input.value.trim();
+  
+  if (!content) {
+    showToast('Vui lòng nhập phản hồi! 💬', 'error');
+    return;
+  }
+  
+  DB.addReply(messageId, currentStudent.id, currentStudent.name, 'student', content);
+  input.value = '';
+  showToast('Đã gửi phản hồi! 💬', 'success');
+  renderCommunalMessages();
+}
+
+function deleteOwnMessage(messageId) {
+  if (confirm('Bạn chắc chắn muốn xóa bài đăng này? 🗑️')) {
+    DB.removeMessage(messageId);
+    showToast('Đã xóa bài đăng! 🗑️', 'success');
+    renderCommunalMessages();
+  }
+}
+
+function deleteOwnReply(messageId, replyId) {
+  if (confirm('Bạn chắc chắn muốn xóa phản hồi này? 🗑️')) {
+    DB.removeReply(messageId, replyId);
+    showToast('Đã xóa phản hồi! 🗑️', 'success');
+    renderCommunalMessages();
+  }
 }
 
 // ============================================

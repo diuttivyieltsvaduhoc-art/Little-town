@@ -51,6 +51,11 @@
         <span class="sidebar-nav-icon">📋</span> Lịch sử điểm
       </button>
 
+      <div class="sidebar-section-label">Giao tiếp</div>
+      <button class="sidebar-nav-item" onclick="showPage('communal')" id="nav-communal">
+        <span class="sidebar-nav-icon">🏛️</span> Nhà Chung
+      </button>
+
       <div class="sidebar-section-label">Công cụ</div>
       <button class="sidebar-nav-item" onclick="showPage('qrcodes')" id="nav-qrcodes">
         <span class="sidebar-nav-icon">📱</span> QR & Link
@@ -212,6 +217,47 @@
         </div>
       </div>
 
+      <!-- ===== COMMUNAL HOUSE PAGE ===== -->
+      <div id="page-communal" class="page-view" style="display:none;">
+        <div class="glass home-panel">
+          <div class="section-header" style="flex-wrap: wrap; gap: 12px;">
+            <div class="section-title">🏛️ Nhà Chung <span>Bảng tin & Thảo luận</span></div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-size:0.88rem; font-weight:700; color:var(--text-muted);">Lớp học:</span>
+              <select class="input" id="communalClassSelect" onchange="onTeacherClassSelect()" style="width:180px; padding:9px 14px; font-size:0.88rem;">
+                <!-- Filled dynamically with teacher's classes -->
+              </select>
+            </div>
+          </div>
+          
+          <div class="grid-2" style="grid-template-columns: 280px 1fr; align-items: start;">
+            <!-- Left panel: Create announcement -->
+            <div class="glass-light" style="padding: 20px; border: 1.5px solid var(--border);">
+              <h3 style="font-size: 1.05rem; margin-bottom: 12px; display:flex; align-items:center; gap:6px;">
+                <span>📢</span> Đăng thông báo
+              </h3>
+              <div style="color:var(--text-muted); font-size:0.8rem; margin-bottom:12px;">
+                Thông báo của giáo viên sẽ hiển thị nổi bật với viền vàng trên bảng tin lớp học của học sinh.
+              </div>
+              <textarea class="input" id="teacherPostInput" placeholder="Viết thông báo hoặc lời nhắn... ✍️" rows="5" style="resize:none; background:rgba(0,0,0,0.2); border-color:var(--border-light); font-size:0.88rem; margin-bottom:12px;"></textarea>
+              <button class="btn btn-accent btn-block" onclick="submitTeacherAnnouncement()" style="padding: 10px 16px;">
+                <span>🚀 Gửi thông báo</span>
+              </button>
+            </div>
+            
+            <!-- Right panel: Timeline -->
+            <div class="glass-light" style="padding: 20px; display:flex; flex-direction:column; gap:16px;">
+              <h3 style="font-size: 1.05rem; display:flex; align-items:center; gap:6px;">
+                <span>📋</span> Bảng tin lớp
+              </h3>
+              <div id="teacherCommunalTimeline" style="display:flex; flex-direction:column; gap:16px; max-height: 550px; overflow-y:auto; padding-right: 4px;">
+                <!-- Filled dynamically -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div><!-- /teacher-content -->
   </main>
 </div>
@@ -351,10 +397,10 @@
 <!-- Toast -->
 <div id="toast-container"></div>
 
-<script src="js/data.js?v=9"></script>
-<script src="js/sync.js?v=9"></script>
-<script src="js/auth.js?v=9"></script>
-<script src="js/ui.js?v=9"></script>
+<script src="js/data.js?v=10"></script>
+<script src="js/sync.js?v=10"></script>
+<script src="js/auth.js?v=10"></script>
+<script src="js/ui.js?v=10"></script>
 <script>
 // ---- GUARD ----
 AUTH.initDefaultData();
@@ -405,6 +451,7 @@ function startTeacherPolling() {
       else if (currentPage === 'points') renderPointsPage();
       else if (currentPage === 'history') renderHistory();
       else if (currentPage === 'qrcodes') renderQRList();
+      else if (currentPage === 'communal') renderCommunalPage();
     }
   }, 8000);
 }
@@ -435,7 +482,7 @@ function showPage(page) {
   document.getElementById('page-' + page).style.display = 'block';
   document.getElementById('nav-' + page)?.classList.add('active');
 
-  const titles = { dashboard:'📊 Dashboard', classes:'🏫 Lớp học', students:'🧒 Học sinh', points:'⭐ Cộng điểm', history:'📋 Lịch sử', qrcodes:'📱 QR & Link' };
+  const titles = { dashboard:'📊 Dashboard', classes:'🏫 Lớp học', students:'🧒 Học sinh', points:'⭐ Cộng điểm', history:'📋 Lịch sử', qrcodes:'📱 QR & Link', communal:'🏛️ Nhà Chung' };
   document.getElementById('topbarTitle').textContent = titles[page] || page;
 
   if (page === 'dashboard') renderDashboard();
@@ -444,6 +491,7 @@ function showPage(page) {
   else if (page === 'points') renderPointsPage();
   else if (page === 'history') renderHistory();
   else if (page === 'qrcodes') renderQRList();
+  else if (page === 'communal') renderCommunalPage();
 }
 
 // ---- RENDER DASHBOARD ----
@@ -857,6 +905,205 @@ function handleDeleteStudentClick(studentId, classId) {
   const s = DB.getStudent(studentId);
   if (!s) return;
   confirmDelete(`Xóa học sinh <b>${escapeHTML(s.name)}</b>?`, () => deleteStudent(studentId, classId));
+}
+
+// ---- COMMUNAL HOUSE MODERATION ----
+function renderCommunalPage() {
+  const classes = DB.getClasses();
+  const select = document.getElementById('communalClassSelect');
+  
+  // Populate classes if not done or empty
+  if (select.options.length === 0) {
+    classes.forEach(c => {
+      const o = document.createElement('option');
+      o.value = c.id;
+      o.textContent = c.name;
+      select.appendChild(o);
+    });
+  }
+  
+  const selectedClassId = select.value;
+  if (!selectedClassId) {
+    document.getElementById('teacherCommunalTimeline').innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">🏫</div>
+        <div class="empty-state-text">Vui lòng tạo lớp học trước!</div>
+      </div>
+    `;
+    return;
+  }
+  
+  renderTeacherCommunalTimeline(selectedClassId);
+}
+
+function onTeacherClassSelect() {
+  const selectedClassId = document.getElementById('communalClassSelect').value;
+  renderTeacherCommunalTimeline(selectedClassId);
+}
+
+function renderTeacherCommunalTimeline(classId) {
+  const messages = DB.getMessagesForClass(classId);
+  const container = document.getElementById('teacherCommunalTimeline');
+  
+  if (messages.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">🏛️</div>
+        <div class="empty-state-text">Nhà Chung chưa có bài đăng nào.</div>
+      </div>
+    `;
+    return;
+  }
+  
+  // Sort messages descending by timestamp
+  messages.sort((a, b) => b.timestamp - a.timestamp);
+  
+  let html = '';
+  messages.forEach(msg => {
+    const isTeacher = msg.authorRole === 'teacher';
+    const borderStyle = isTeacher ? 'border: 2.5px solid var(--warm); background: rgba(247,151,30,0.08);' : '';
+    const nameColor = isTeacher ? 'color: var(--warm-light);' : 'color: var(--primary-light);';
+    const badgeHtml = isTeacher 
+      ? `<span class="badge badge-warm" style="font-size:0.75rem; padding: 2px 8px;">📢 Giáo Viên</span>` 
+      : `<span class="badge badge-primary" style="font-size:0.75rem; padding: 2px 8px;">Học Sinh</span>`;
+      
+    const formattedTime = new Date(msg.timestamp).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
+    const escapedContent = escapeHTML(msg.content).replace(/\n/g, '<br>');
+    
+    // Teacher can delete ANY post
+    const deleteBtn = `<button class="btn btn-ghost btn-sm" onclick="moderateDeleteMessage('${msg.id}', '${classId}')" style="padding:4px 10px; font-size:0.75rem; border-color:rgba(255,101,132,0.4); color:var(--secondary); height:auto; min-height:unset;">Kiểm duyệt / Xóa</button>`;
+      
+    // Replies HTML
+    let repliesHtml = '';
+    const replies = msg.replies || [];
+    replies.sort((a, b) => a.timestamp - b.timestamp);
+    
+    if (replies.length > 0) {
+      repliesHtml = `
+        <div style="margin-top:12px; padding-left:16px; border-left: 2px solid var(--border-light); display:flex; flex-direction:column; gap:8px;">
+          ${replies.map(r => {
+            const isRepTeacher = r.authorRole === 'teacher';
+            const repNameColor = isRepTeacher ? 'color: var(--warm-light); font-weight: 800;' : 'color: var(--primary-light); font-weight: 700;';
+            const repBadgeHtml = isRepTeacher 
+              ? `<span class="badge badge-warm" style="font-size:0.65rem; padding: 1px 5px; transform: scale(0.9); margin-left: 4px;">GV</span>` 
+              : ``;
+            const formattedRepTime = new Date(r.timestamp).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' });
+            const escapedRepContent = escapeHTML(r.content).replace(/\n/g, '<br>');
+            
+            // Teacher can delete ANY reply
+            const repDeleteBtn = `<button class="btn btn-ghost btn-icon" onclick="moderateDeleteReply('${msg.id}', '${r.id}', '${classId}')" style="width:20px; height:20px; font-size:0.65rem; border:none; color:var(--secondary); padding:0; display:inline-flex; align-items:center; justify-content:center;" title="Xóa bình luận">✕</button>`;
+              
+            return `
+              <div style="background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: var(--radius-sm); font-size:0.85rem; position:relative; border: 1px solid var(--border-light);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                  <div style="display:flex; align-items:center; gap:6px;">
+                    <span style="${repNameColor}">${escapeHTML(r.authorName)}</span>
+                    ${repBadgeHtml}
+                    <span style="font-size:0.7rem; color:var(--text-muted);">${formattedRepTime}</span>
+                  </div>
+                  <div style="margin-left: auto;">
+                    ${repDeleteBtn}
+                  </div>
+                </div>
+                <div style="color:var(--text-white); word-break:break-word; line-height: 1.4;">${escapedRepContent}</div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+    
+    html += `
+      <div class="glass-light" style="padding:16px; border-radius:var(--radius); border-color:var(--border-light); ${borderStyle}">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div style="width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:center; font-size: 1.1rem; border: 1.5px solid var(--border-light);">
+              ${isTeacher ? '👨‍🏫' : '👤'}
+            </div>
+            <div>
+              <div style="display:flex; align-items:center; gap:6px;">
+                <strong style="${nameColor} font-size:0.95rem;">${escapeHTML(msg.authorName)}</strong>
+                ${badgeHtml}
+              </div>
+              <div style="font-size:0.72rem; color:var(--text-muted);">${formattedTime}</div>
+            </div>
+          </div>
+          ${deleteBtn}
+        </div>
+        
+        <div style="font-size:0.92rem; color:var(--text-white); margin-bottom:12px; word-break:break-word; line-height:1.5; padding-left: 2px;">
+          ${escapedContent}
+        </div>
+        
+        <div class="divider" style="margin: 10px 0; opacity: 0.5;"></div>
+        
+        <!-- Replies list -->
+        ${repliesHtml}
+        
+        <!-- Add Reply Form (Teacher Reply) -->
+        <div style="display:flex; gap:8px; margin-top:12px; align-items:center;">
+          <input type="text" class="input" placeholder="Viết phản hồi của giáo viên..." id="teacherReplyInput_${msg.id}" style="padding: 8px 12px; font-size:0.85rem; flex-grow:1; background:rgba(0,0,0,0.25); border-color:var(--border-light); border-radius:var(--radius-sm);" onkeydown="if(event.key === 'Enter') submitTeacherReply('${msg.id}', '${classId}')">
+          <button class="btn btn-accent btn-sm" onclick="submitTeacherReply('${msg.id}', '${classId}')" style="padding:8px 16px; font-size:0.8rem; border-radius:var(--radius-sm); height:34px; font-weight:bold;">Phản hồi</button>
+        </div>
+      </div>
+    `;
+  });
+  
+  container.innerHTML = html;
+}
+
+function submitTeacherAnnouncement() {
+  const select = document.getElementById('communalClassSelect');
+  const classId = select.value;
+  if (!classId) return;
+  
+  const input = document.getElementById('teacherPostInput');
+  const content = input.value.trim();
+  
+  if (!content) {
+    showToast('Vui lòng nhập nội dung thông báo! ✍️', 'error');
+    return;
+  }
+  
+  const authorName = teacher?.name || 'Giáo Viên';
+  
+  DB.addMessage(classId, teacher.id || 'teacher', authorName, 'teacher', content);
+  input.value = '';
+  showToast('Đã đăng thông báo lên Nhà Chung! 📢', 'success');
+  renderTeacherCommunalTimeline(classId);
+}
+
+function submitTeacherReply(messageId, classId) {
+  const input = document.getElementById('teacherReplyInput_' + messageId);
+  const content = input.value.trim();
+  
+  if (!content) {
+    showToast('Vui lòng nhập phản hồi! 💬', 'error');
+    return;
+  }
+  
+  const authorName = teacher?.name || 'Giáo Viên';
+  
+  DB.addReply(messageId, teacher.id || 'teacher', authorName, 'teacher', content);
+  input.value = '';
+  showToast('Đã gửi phản hồi! 💬', 'success');
+  renderTeacherCommunalTimeline(classId);
+}
+
+function moderateDeleteMessage(messageId, classId) {
+  if (confirm('Kiểm duyệt: Bạn chắc chắn muốn xóa bài đăng này? Lệnh xóa sẽ được đồng bộ với tất cả học sinh. 🗑️')) {
+    DB.removeMessage(messageId);
+    showToast('Đã xóa bài đăng! 🗑️', 'success');
+    renderTeacherCommunalTimeline(classId);
+  }
+}
+
+function moderateDeleteReply(messageId, replyId, classId) {
+  if (confirm('Kiểm duyệt: Bạn chắc chắn muốn xóa bình luận này? Lệnh xóa sẽ được đồng bộ với tất cả học sinh. 🗑️')) {
+    DB.removeReply(messageId, replyId);
+    showToast('Đã xóa bình luận! 🗑️', 'success');
+    renderTeacherCommunalTimeline(classId);
+  }
 }
 
 // ---- TOAST ----

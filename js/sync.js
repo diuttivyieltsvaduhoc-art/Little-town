@@ -15,7 +15,7 @@ const FIREBASE_DB_URL = "https://little-town-70d02-default-rtdb.asia-southeast1.
 window.SERVER_NETWORK_IP = '';
 
 const SYNC = (() => {
-  const KEYS = ['lt_deleted_students', 'lt_deleted_classes', 'lt_teachers', 'lt_classes', 'lt_students', 'lt_history', 'lt_initialized', 'lt_theme'];
+  const KEYS = ['lt_deleted_students', 'lt_deleted_classes', 'lt_deleted_messages', 'lt_teachers', 'lt_classes', 'lt_students', 'lt_history', 'lt_messages', 'lt_initialized', 'lt_theme'];
   // Chỉ sync khi chạy qua server, không phải file://
   const enabled = window.location.protocol !== 'file:';
   let _saveTimer = null;
@@ -67,7 +67,7 @@ const SYNC = (() => {
     const localArr = safeParse(localRaw);
     const serverArr = safeParse(serverRaw);
     
-    if (key === 'lt_deleted_students' || key === 'lt_deleted_classes') {
+    if (key === 'lt_deleted_students' || key === 'lt_deleted_classes' || key === 'lt_deleted_messages') {
       const mergedSet = new Set([...localArr, ...serverArr]);
       return Array.from(mergedSet);
     }
@@ -148,6 +148,44 @@ const SYNC = (() => {
         .slice(0, 500);
     }
     
+    if (key === 'lt_messages') {
+      const deletedIds = safeParse(Object.getPrototypeOf(localStorage).getItem.call(localStorage, 'lt_deleted_messages'));
+      const mergedMap = new Map();
+      
+      // Put server messages first
+      serverArr.forEach(msg => {
+        if (msg && msg.id && !deletedIds.includes(msg.id)) {
+          mergedMap.set(msg.id, msg);
+        }
+      });
+      
+      // Merge local messages
+      localArr.forEach(localMsg => {
+        if (!localMsg || !localMsg.id || deletedIds.includes(localMsg.id)) return;
+        const serverMsg = mergedMap.get(localMsg.id);
+        if (serverMsg) {
+          // Merge replies list (union of replies by id)
+          const mergedRepliesMap = new Map();
+          (serverMsg.replies || []).forEach(r => { if (r && r.id) mergedRepliesMap.set(r.id, r); });
+          (localMsg.replies || []).forEach(r => { if (r && r.id) mergedRepliesMap.set(r.id, r); });
+          
+          const mergedReplies = Array.from(mergedRepliesMap.values())
+            .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+            
+          mergedMap.set(localMsg.id, {
+            ...serverMsg,
+            ...localMsg,
+            replies: mergedReplies
+          });
+        } else {
+          mergedMap.set(localMsg.id, localMsg);
+        }
+      });
+      
+      return Array.from(mergedMap.values())
+        .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)); // Newest posts first
+    }
+    
     return serverArr;
   }
 
@@ -173,7 +211,7 @@ const SYNC = (() => {
           const current = Object.getPrototypeOf(localStorage).getItem.call(localStorage, key);
           if (current !== raw) {
             let mergedRaw = raw;
-            if (key === 'lt_students' || key === 'lt_teachers' || key === 'lt_classes' || key === 'lt_history' || key === 'lt_deleted_students' || key === 'lt_deleted_classes') {
+            if (key === 'lt_students' || key === 'lt_teachers' || key === 'lt_classes' || key === 'lt_history' || key === 'lt_deleted_students' || key === 'lt_deleted_classes' || key === 'lt_messages' || key === 'lt_deleted_messages') {
               mergedRaw = JSON.stringify(mergeArrays(key, current, raw));
             }
             if (current !== mergedRaw) {
@@ -216,7 +254,7 @@ const SYNC = (() => {
         
         let mergedVal = localVal;
         if (localVal !== null && serverVal !== undefined) {
-          if (key === 'lt_students' || key === 'lt_teachers' || key === 'lt_classes' || key === 'lt_history' || key === 'lt_deleted_students' || key === 'lt_deleted_classes') {
+          if (key === 'lt_students' || key === 'lt_teachers' || key === 'lt_classes' || key === 'lt_history' || key === 'lt_deleted_students' || key === 'lt_deleted_classes' || key === 'lt_messages' || key === 'lt_deleted_messages') {
             const localRaw = typeof localVal === 'string' ? localVal : JSON.stringify(localVal);
             const serverRaw = typeof serverVal === 'string' ? serverVal : JSON.stringify(serverVal);
             mergedVal = JSON.stringify(mergeArrays(key, localRaw, serverRaw));

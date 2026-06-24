@@ -1534,6 +1534,43 @@ const UI = {
     </div>`;
   },
 
+  renderCommunalHouse(size = 110) {
+    return `
+    <div class="house-exterior" style="position:relative;display:inline-block;">
+      <svg viewBox="0 0 140 140" width="${size}" height="${size * 1.0}" xmlns="http://www.w3.org/2000/svg">
+        <!-- Shadow -->
+        <ellipse cx="70" cy="135" rx="55" ry="6" fill="rgba(0,0,0,0.2)"/>
+        <!-- Main Roof (Red/Crimson) -->
+        <polygon points="10,65 70,20 130,65" fill="#B03A2E"/>
+        <polygon points="15,65 70,25 125,65" fill="#E74C3C" opacity="0.3"/>
+        <!-- Clock Tower Roof -->
+        <polygon points="50,25 70,2 90,25" fill="#B03A2E"/>
+        <!-- Clock Tower Walls -->
+        <rect x="52" y="25" width="36" height="30" fill="#EAECEE" stroke="#BDC3C7" stroke-width="1.5"/>
+        <!-- Clock -->
+        <circle cx="70" cy="40" r="8" fill="#FFF" stroke="#2C3E50" stroke-width="1.5"/>
+        <line x1="70" y1="40" x2="70" y2="35" stroke="#2C3E50" stroke-width="1.5"/>
+        <line x1="70" y1="40" x2="74" y2="40" stroke="#2C3E50" stroke-width="1"/>
+        <!-- Main Building Walls (Cream/Yellowish) -->
+        <rect x="18" y="65" width="104" height="65" fill="#F9E79F" stroke="#F5B041" stroke-width="2"/>
+        <!-- Main Pillars -->
+        <rect x="25" y="65" width="12" height="65" fill="#F5B041"/>
+        <rect x="103" y="65" width="12" height="65" fill="#F5B041"/>
+        <!-- Large Door -->
+        <rect x="52" y="90" width="36" height="40" rx="4" fill="#784212" stroke="#5C330C" stroke-width="1"/>
+        <circle cx="60" cy="110" r="2" fill="#FFD700"/>
+        <circle cx="80" cy="110" r="2" fill="#FFD700"/>
+        <!-- Big Windows -->
+        <rect x="42" y="70" width="16" height="15" rx="2" fill="#AED6F1" stroke="#BDC3C7"/>
+        <line x1="50" y1="70" x2="50" y2="85" stroke="white" stroke-width="1"/>
+        <rect x="82" y="70" width="16" height="15" rx="2" fill="#AED6F1" stroke="#BDC3C7"/>
+        <line x1="90" y1="70" x2="90" y2="85" stroke="white" stroke-width="1"/>
+        <!-- Steps -->
+        <rect x="44" y="130" width="52" height="5" rx="2" fill="#BDC3C7"/>
+      </svg>
+    </div>`;
+  },
+
   darken(hex, amount) {
     const r = parseInt(hex.slice(1, 3), 16);
     const g = parseInt(hex.slice(3, 5), 16);

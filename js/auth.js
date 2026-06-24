@@ -422,5 +422,77 @@ const DB = {
     
     this.updateStudent(studentId, { pets, inventory });
     return { success: true, newStats };
+  },
+
+  getMessages() {
+    return JSON.parse(localStorage.getItem('lt_messages') || '[]');
+  },
+
+  saveMessages(messages) {
+    localStorage.setItem('lt_messages', JSON.stringify(messages));
+  },
+
+  getMessagesForClass(classId) {
+    return this.getMessages().filter(m => m.classId === classId);
+  },
+
+  addMessage(classId, authorId, authorName, authorRole, content) {
+    const messages = this.getMessages();
+    const newMsg = {
+      id: 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+      classId,
+      authorId,
+      authorName,
+      authorRole,
+      content,
+      timestamp: Date.now(),
+      replies: []
+    };
+    messages.unshift(newMsg);
+    this.saveMessages(messages);
+    return newMsg;
+  },
+
+  addReply(messageId, authorId, authorName, authorRole, content) {
+    const messages = this.getMessages();
+    const idx = messages.findIndex(m => m.id === messageId);
+    if (idx !== -1) {
+      const replies = [...(messages[idx].replies || [])];
+      const newReply = {
+        id: 'rep_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+        authorId,
+        authorName,
+        authorRole,
+        content,
+        timestamp: Date.now()
+      };
+      replies.push(newReply);
+      messages[idx].replies = replies;
+      this.saveMessages(messages);
+      return newReply;
+    }
+    return null;
+  },
+
+  removeMessage(messageId) {
+    const messages = this.getMessages().filter(m => m.id !== messageId);
+    this.saveMessages(messages);
+    
+    const deleted = JSON.parse(localStorage.getItem('lt_deleted_messages') || '[]');
+    if (!deleted.includes(messageId)) {
+      deleted.push(messageId);
+      localStorage.setItem('lt_deleted_messages', JSON.stringify(deleted));
+    }
+  },
+
+  removeReply(messageId, replyId) {
+    const messages = this.getMessages();
+    const idx = messages.findIndex(m => m.id === messageId);
+    if (idx !== -1) {
+      messages[idx].replies = (messages[idx].replies || []).filter(r => r.id !== replyId);
+      this.saveMessages(messages);
+      return true;
+    }
+    return false;
   }
 };
