@@ -15,7 +15,7 @@ const FIREBASE_DB_URL = "https://little-town-70d02-default-rtdb.asia-southeast1.
 window.SERVER_NETWORK_IP = '';
 
 const SYNC = (() => {
-  const KEYS = ['lt_teachers', 'lt_classes', 'lt_students', 'lt_history', 'lt_initialized', 'lt_theme'];
+  const KEYS = ['lt_deleted_students', 'lt_deleted_classes', 'lt_teachers', 'lt_classes', 'lt_students', 'lt_history', 'lt_initialized', 'lt_theme'];
   // Chỉ sync khi chạy qua server, không phải file://
   const enabled = window.location.protocol !== 'file:';
   let _saveTimer = null;
@@ -56,21 +56,37 @@ const SYNC = (() => {
   // Private helper to merge local and server array data to prevent data overwrites
   function mergeArrays(key, localRaw, serverRaw) {
     const safeParse = (str) => {
-      if (!str) return [];
-      try { return typeof str === 'string' ? JSON.parse(str) : str; } catch(e) { return []; }
+      if (!str || str === 'null' || str === 'undefined') return [];
+      try {
+        const parsed = typeof str === 'string' ? JSON.parse(str) : str;
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (e) {
+        return [];
+      }
     };
     const localArr = safeParse(localRaw);
     const serverArr = safeParse(serverRaw);
     
+    if (key === 'lt_deleted_students' || key === 'lt_deleted_classes') {
+      const mergedSet = new Set([...localArr, ...serverArr]);
+      return Array.from(mergedSet);
+    }
+    
     if (key === 'lt_students') {
+      const deletedIds = safeParse(Object.getPrototypeOf(localStorage).getItem.call(localStorage, 'lt_deleted_students'));
       const mergedMap = new Map();
+      
       // Put server students first
-      serverArr.forEach(s => { if (s && s.id) mergedMap.set(s.id, s); });
+      serverArr.forEach(s => { 
+        if (s && s.id && !deletedIds.includes(s.id)) {
+          mergedMap.set(s.id, s); 
+        }
+      });
       
       // Merge local students
       const localCurrentStudent = safeParse(Object.getPrototypeOf(localStorage).getItem.call(localStorage, 'lt_current_student'));
       localArr.forEach(localS => {
-        if (!localS || !localS.id) return;
+        if (!localS || !localS.id || deletedIds.includes(localS.id)) return;
         const serverS = mergedMap.get(localS.id);
         if (serverS) {
           let merged = { ...serverS, ...localS };
@@ -106,9 +122,20 @@ const SYNC = (() => {
     }
     
     if (key === 'lt_teachers' || key === 'lt_classes') {
+      const deletedIds = key === 'lt_classes' 
+        ? safeParse(Object.getPrototypeOf(localStorage).getItem.call(localStorage, 'lt_deleted_classes'))
+        : [];
       const mergedMap = new Map();
-      serverArr.forEach(item => { if (item && item.id) mergedMap.set(item.id, item); });
-      localArr.forEach(item => { if (item && item.id) mergedMap.set(item.id, item); });
+      serverArr.forEach(item => { 
+        if (item && item.id && !deletedIds.includes(item.id)) {
+          mergedMap.set(item.id, item); 
+        }
+      });
+      localArr.forEach(item => { 
+        if (item && item.id && !deletedIds.includes(item.id)) {
+          mergedMap.set(item.id, item); 
+        }
+      });
       return Array.from(mergedMap.values());
     }
     
@@ -146,7 +173,7 @@ const SYNC = (() => {
           const current = Object.getPrototypeOf(localStorage).getItem.call(localStorage, key);
           if (current !== raw) {
             let mergedRaw = raw;
-            if (key === 'lt_students' || key === 'lt_teachers' || key === 'lt_classes' || key === 'lt_history') {
+            if (key === 'lt_students' || key === 'lt_teachers' || key === 'lt_classes' || key === 'lt_history' || key === 'lt_deleted_students' || key === 'lt_deleted_classes') {
               mergedRaw = JSON.stringify(mergeArrays(key, current, raw));
             }
             if (current !== mergedRaw) {
@@ -189,7 +216,7 @@ const SYNC = (() => {
         
         let mergedVal = localVal;
         if (localVal !== null && serverVal !== undefined) {
-          if (key === 'lt_students' || key === 'lt_teachers' || key === 'lt_classes' || key === 'lt_history') {
+          if (key === 'lt_students' || key === 'lt_teachers' || key === 'lt_classes' || key === 'lt_history' || key === 'lt_deleted_students' || key === 'lt_deleted_classes') {
             const localRaw = typeof localVal === 'string' ? localVal : JSON.stringify(localVal);
             const serverRaw = typeof serverVal === 'string' ? serverVal : JSON.stringify(serverVal);
             mergedVal = JSON.stringify(mergeArrays(key, localRaw, serverRaw));

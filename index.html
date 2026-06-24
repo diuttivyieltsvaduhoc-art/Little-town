@@ -203,9 +203,9 @@
   <!-- Toast -->
   <div id="toast-container"></div>
 
-  <script src="js/data.js?v=6"></script>
-  <script src="js/sync.js?v=6"></script>
-  <script src="js/auth.js?v=6"></script>
+  <script src="js/data.js?v=9"></script>
+  <script src="js/sync.js?v=9"></script>
+  <script src="js/auth.js?v=9"></script>
   <script>
     // ---- INIT (load from server first, then init) ----
     async function bootApp() {
@@ -464,7 +464,7 @@
       await SYNC.reset();
       // Reset tất cả dữ liệu (cả auth state)
       ['lt_initialized','lt_teachers','lt_classes','lt_students','lt_history',
-       'lt_current_teacher','lt_current_student']
+       'lt_current_teacher','lt_current_student','lt_deleted_students','lt_deleted_classes']
         .forEach(k => localStorage.removeItem(k));
       showToast('Đã reset! Đang tải lại...', 'info');
       setTimeout(() => window.location.reload(), 800);

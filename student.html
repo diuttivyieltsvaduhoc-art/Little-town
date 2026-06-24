@@ -562,11 +562,11 @@
 <!-- Toast -->
 <div id="toast-container"></div>
 
-<script src="js/audio.js?v=6"></script>
-<script src="js/data.js?v=6"></script>
-<script src="js/sync.js?v=6"></script>
-<script src="js/auth.js?v=6"></script>
-<script src="js/ui.js?v=6"></script>
+<script src="js/audio.js?v=9"></script>
+<script src="js/data.js?v=9"></script>
+<script src="js/sync.js?v=9"></script>
+<script src="js/auth.js?v=9"></script>
+<script src="js/ui.js?v=9"></script>
 <script>
 // ============================================
 // LITTLE TOWN - STUDENT.JS (inline)
@@ -747,7 +747,7 @@ function renderRoomCharacter() {
     return;
   }
   charEl.innerHTML = `
-    <div class="char-tooltip" id="charTooltip">Xin chào, ${currentStudent.name}! 👋</div>
+    <div class="char-tooltip" id="charTooltip">Xin chào, ${escapeHTML(currentStudent.name)}! 👋</div>
     ${UI.renderCharacter(currentStudent.gender, currentStudent.characterStyle, currentStudent.outfit, 100, true)}
   `;
 
@@ -1201,7 +1201,7 @@ function renderPetsPanel() {
         </div>
         <div>
           <div class="pet-name" style="display:flex;align-items:center;gap:6px;">
-            <input class="pet-name-editable" value="${pet.customName || pet.nameVi}"
+            <input class="pet-name-editable" value="${escapeHTML(pet.customName || pet.nameVi)}"
               onchange="renamePet(${i}, this.value)"
               onclick="this.select()"
               title="Nhấn để đổi tên"
@@ -1389,7 +1389,7 @@ function renderStreet() {
   row.innerHTML = students.map(s => `
     <div class="house-wrapper" onclick="${s.id !== currentStudent.id ? `visitHouse('${s.id}')` : 'showToast("Đây là nhà của bạn! 🏠", "info")'}">
       ${UI.renderHouseFront(s, 90)}
-      <div class="house-name-tag" style="${s.id === currentStudent.id ? 'border-color:var(--accent);color:var(--accent)' : ''}">${s.id === currentStudent.id ? '🏠' : ''} ${s.name}</div>
+      <div class="house-name-tag" style="${s.id === currentStudent.id ? 'border-color:var(--accent);color:var(--accent)' : ''}">${s.id === currentStudent.id ? '🏠' : ''} ${escapeHTML(s.name)}</div>
       <div class="house-pts-tag">⭐${s.points || 0}</div>
     </div>
   `).join('');
@@ -1857,7 +1857,7 @@ function visitHouse(studentId) {
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
       <div style="text-align:center;background:var(--bg-surface2);padding:16px;border-radius:var(--radius);border:1px solid var(--border);">
-        <div style="font-weight:800;font-size:1.2rem;">${student.name}</div>
+        <div style="font-weight:800;font-size:1.2rem;">${escapeHTML(student.name)}</div>
         <div class="points-badge" style="margin:8px auto;display:inline-flex;">⭐ ${student.points || 0} điểm</div>
       </div>
       <div style="background:var(--bg-surface2);padding:16px;border-radius:var(--radius);border:1px solid var(--border);">
@@ -1867,7 +1867,7 @@ function visitHouse(studentId) {
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
               <span>${pet.emoji}</span>
               <div>
-                <span style="font-weight:700;font-size:0.85rem;">${pet.customName || pet.nameVi}</span>
+                <span style="font-weight:700;font-size:0.85rem;">${escapeHTML(pet.customName || pet.nameVi)}</span>
                 <span style="font-size:0.75rem;color:var(--text-muted);"> (${pet.nameVi})</span>
               </div>
             </div>

@@ -71,6 +71,8 @@ const AUTH = {
       localStorage.setItem('lt_classes', JSON.stringify(defaultClasses));
       localStorage.setItem('lt_students', JSON.stringify(defaultStudents));
       localStorage.setItem('lt_history', JSON.stringify(defaultHistory));
+      localStorage.setItem('lt_deleted_students', '[]');
+      localStorage.setItem('lt_deleted_classes', '[]');
       localStorage.setItem('lt_initialized', 'true');
     }
   },
@@ -292,6 +294,13 @@ const DB = {
   removeStudent(id) {
     const students = this.getStudents().filter(s => s.id !== id);
     this.saveStudents(students);
+    
+    // Track deletion
+    const deleted = JSON.parse(localStorage.getItem('lt_deleted_students') || '[]');
+    if (!deleted.includes(id)) {
+      deleted.push(id);
+      localStorage.setItem('lt_deleted_students', JSON.stringify(deleted));
+    }
   },
 
   addClass(cls) {
@@ -307,11 +316,28 @@ const DB = {
   },
 
   removeClass(id) {
+    // Track deleted students in that class
+    const studentsToRemove = this.getStudents().filter(s => s.classId === id);
+    const deletedStudents = JSON.parse(localStorage.getItem('lt_deleted_students') || '[]');
+    studentsToRemove.forEach(s => {
+      if (!deletedStudents.includes(s.id)) {
+        deletedStudents.push(s.id);
+      }
+    });
+    localStorage.setItem('lt_deleted_students', JSON.stringify(deletedStudents));
+
     // Also remove students in that class
     const students = this.getStudents().filter(s => s.classId !== id);
     this.saveStudents(students);
     const classes = this.getClasses().filter(c => c.id !== id);
     this.saveClasses(classes);
+
+    // Track deleted class
+    const deletedClasses = JSON.parse(localStorage.getItem('lt_deleted_classes') || '[]');
+    if (!deletedClasses.includes(id)) {
+      deletedClasses.push(id);
+      localStorage.setItem('lt_deleted_classes', JSON.stringify(deletedClasses));
+    }
   },
 
   addPoints(studentId, points, teacherId, teacherName, note = '') {

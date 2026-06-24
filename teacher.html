@@ -351,10 +351,10 @@
 <!-- Toast -->
 <div id="toast-container"></div>
 
-<script src="js/data.js?v=6"></script>
-<script src="js/sync.js?v=6"></script>
-<script src="js/auth.js?v=6"></script>
-<script src="js/ui.js?v=6"></script>
+<script src="js/data.js?v=9"></script>
+<script src="js/sync.js?v=9"></script>
+<script src="js/auth.js?v=9"></script>
+<script src="js/ui.js?v=9"></script>
 <script>
 // ---- GUARD ----
 AUTH.initDefaultData();
@@ -481,7 +481,7 @@ function renderDashboard() {
     return `<div class="class-list-item" onclick="showPage('classes')">
       <div class="class-list-icon">🏫</div>
       <div>
-        <div class="class-list-name">${cls.name}</div>
+        <div class="class-list-name">${escapeHTML(cls.name)}</div>
         <div class="class-list-count">${cnt} học sinh</div>
       </div>
       <span class="class-list-chevron">›</span>
@@ -502,10 +502,10 @@ function renderClasses() {
       return `<div class="class-list-item" onclick="showClassDetail('${cls.id}')">
         <div class="class-list-icon">🏫</div>
         <div>
-          <div class="class-list-name">${cls.name}</div>
+          <div class="class-list-name">${escapeHTML(cls.name)}</div>
           <div class="class-list-count">${cnt} học sinh</div>
         </div>
-        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();confirmDelete('Xóa lớp <b>${cls.name}</b>? Tất cả học sinh trong lớp cũng sẽ bị xóa.', () => deleteClass('${cls.id}'))">🗑️</button>
+        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();handleDeleteClassClick('${cls.id}')">🗑️</button>
       </div>`;
     }).join('') || '<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-text">Chưa có lớp nào</div></div>';
   };
@@ -519,7 +519,7 @@ function showClassDetail(classId) {
 
   document.getElementById('classDetailContent').innerHTML = `
     <div style="margin-bottom:16px;">
-      <div style="font-size:1.1rem;font-weight:800;">${cls.name}</div>
+      <div style="font-size:1.1rem;font-weight:800;">${escapeHTML(cls.name)}</div>
       <div style="font-size:0.82rem;color:var(--text-muted);">Tạo lúc: ${new Date(cls.createdAt).toLocaleDateString('vi-VN')}</div>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
@@ -531,13 +531,13 @@ function showClassDetail(classId) {
         <div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg-surface2);border-radius:var(--radius-sm);">
           <div class="avatar" style="width:36px;height:36px;font-size:1rem;">${s.gender === 'male' ? '👦' : s.gender === 'female' ? '👧' : '🧒'}</div>
           <div style="flex:1;">
-            <div style="font-weight:700;font-size:0.88rem;">${s.name}</div>
+            <div style="font-weight:700;font-size:0.88rem;">${escapeHTML(s.name)}</div>
             <div style="font-size:0.75rem;color:var(--text-muted);">${s.pets?.length || 0} thú cưng</div>
           </div>
           <div style="font-weight:800;color:var(--warm-light);font-size:0.88rem;">⭐ ${s.points || 0}</div>
           <button class="btn btn-accent btn-sm" onclick="openPointsModal('${s.id}')">+⭐</button>
           <button class="btn btn-ghost btn-sm" onclick="openQRModal('${s.id}')">📱</button>
-          <button class="btn btn-ghost btn-sm" style="color:var(--secondary);" onclick="confirmDelete('Xóa học sinh <b>${s.name}</b>?', () => deleteStudent('${s.id}', '${classId}'))">🗑️</button>
+          <button class="btn btn-ghost btn-sm" style="color:var(--secondary);" onclick="handleDeleteStudentClick('${s.id}', '${classId}')">🗑️</button>
         </div>
       `).join('') || '<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-text">Chưa có học sinh</div></div>'}
     </div>
@@ -573,12 +573,12 @@ function renderStudentsTable() {
         <div class="student-row-avatar">
           <div class="avatar" style="width:36px;height:36px;font-size:1rem;">${s.gender === 'male' ? '👦' : s.gender === 'female' ? '👧' : '🧒'}</div>
           <div>
-            <div class="student-row-name">${s.name}</div>
+            <div class="student-row-name">${escapeHTML(s.name)}</div>
             <div style="font-size:0.72rem;color:var(--text-dim);">${s.id}</div>
           </div>
         </div>
       </td>
-      <td><span class="badge badge-primary">${cls?.name || 'N/A'}</span></td>
+      <td><span class="badge badge-primary">${escapeHTML(cls?.name || 'N/A')}</span></td>
       <td><span class="student-row-points">⭐ ${s.points || 0}</span></td>
       <td>${s.pets?.map(p => p.emoji || (p.type === 'dog' ? '🐕' : '🐈')).join(' ') || '—'}</td>
       <td>${s.setupDone ? '<span class="badge badge-success">✅ Đã cài đặt</span>' : '<span class="badge badge-warm">⏳ Chờ</span>'}</td>
@@ -586,7 +586,7 @@ function renderStudentsTable() {
         <div class="student-row-actions">
           <button class="btn btn-accent btn-sm" onclick="openPointsModal('${s.id}')">+⭐</button>
           <button class="btn btn-primary btn-sm" onclick="openQRModal('${s.id}')">📱</button>
-          <button class="btn btn-ghost btn-sm" style="color:var(--secondary);" onclick="confirmDelete('Xóa <b>${s.name}</b>?', () => deleteStudent('${s.id}'))">🗑️</button>
+          <button class="btn btn-ghost btn-sm" style="color:var(--secondary);" onclick="handleDeleteStudentClick('${s.id}')">🗑️</button>
         </div>
       </td>
     </tr>`;
@@ -613,7 +613,7 @@ function filterStudentsForPoints() {
     <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg-surface2);border-radius:var(--radius-sm);">
       <div class="avatar" style="width:38px;height:38px;font-size:1.1rem;">${s.gender === 'male' ? '👦' : s.gender === 'female' ? '👧' : '🧒'}</div>
       <div style="flex:1;">
-        <div style="font-weight:700;">${s.name}</div>
+        <div style="font-weight:700;">${escapeHTML(s.name)}</div>
         <div style="font-size:0.78rem;color:var(--text-muted);">⭐ ${s.points || 0} điểm</div>
       </div>
       <button class="btn btn-accent btn-sm" onclick="openPointsModal('${s.id}')">➕ Cộng điểm</button>
@@ -652,9 +652,8 @@ function renderHistoryList(history, container) {
       return `<div class="history-item ${isPos ? 'positive' : 'negative'}">
         <div class="avatar" style="width:36px;height:36px;font-size:1rem;">🧒</div>
         <div class="history-info">
-          <div class="history-student">${h.studentName}</div>
-          <div class="history-teacher">Bởi: ${h.teacherName}</div>
-          ${h.note ? `<div class="history-note">📝 ${h.note}</div>` : ''}
+          <div class="history-teacher">Bởi: ${escapeHTML(h.teacherName)}</div>
+          ${h.note ? `<div class="history-note">📝 ${escapeHTML(h.note)}</div>` : ''}
         </div>
         <div>
           <div class="history-change ${isPos ? 'positive' : 'negative'}">${isPos ? '+' : ''}${h.change} ⭐</div>
@@ -681,8 +680,8 @@ function renderQRList() {
     const cls = classes.find(c => c.id === s.classId);
     const link = AUTH.generateStudentUrl(s.id);
     return `<div class="glass home-panel" style="padding:16px;text-align:center;">
-      <div style="font-weight:800;font-size:1rem;margin-bottom:4px;">${s.name}</div>
-      <div class="badge badge-primary" style="margin-bottom:12px;">${cls?.name || 'N/A'}</div>
+      <div style="font-weight:800;font-size:1rem;margin-bottom:4px;">${escapeHTML(s.name)}</div>
+      <div class="badge badge-primary" style="margin-bottom:12px;">${escapeHTML(cls?.name || 'N/A')}</div>
       <div style="background:white;border-radius:10px;padding:12px;margin-bottom:12px;font-size:0.7rem;color:#333;word-break:break-all;line-height:1.4;">
         📱 Quét QR hoặc dùng link:<br><br>
         <img src="https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=${encodeURIComponent(link)}" alt="Mã QR" style="width:110px;height:110px;display:block;margin:8px auto;border:1px solid #ddd;border-radius:6px;background:#fff;padding:4px;" />
@@ -846,6 +845,18 @@ function deleteStudent(studentId, classId) {
   showToast('Đã xóa học sinh! 🗑️', 'info');
   renderStudentsTable();
   if (classId) showClassDetail(classId);
+}
+
+function handleDeleteClassClick(classId) {
+  const cls = DB.getClasses().find(c => c.id === classId);
+  if (!cls) return;
+  confirmDelete(`Xóa lớp <b>${escapeHTML(cls.name)}</b>? Tất cả học sinh trong lớp cũng sẽ bị xóa.`, () => deleteClass(classId));
+}
+
+function handleDeleteStudentClick(studentId, classId) {
+  const s = DB.getStudent(studentId);
+  if (!s) return;
+  confirmDelete(`Xóa học sinh <b>${escapeHTML(s.name)}</b>?`, () => deleteStudent(studentId, classId));
 }
 
 // ---- TOAST ----

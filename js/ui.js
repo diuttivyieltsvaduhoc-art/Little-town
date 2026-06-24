@@ -3,6 +3,16 @@
 // Character, pet, house SVG rendering + animations
 // =============================================
 
+function escapeHTML(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 const UI = {
   getHairClipY(headId) {
     if (!headId) return 15;
