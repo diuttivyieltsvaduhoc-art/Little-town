@@ -135,7 +135,7 @@
 </head>
 <body>
 <!-- ===== TOP NAVIGATION ===== -->
-<nav class="top-nav">
+<nav class="top-nav" id="studentNav">
   <div class="nav-logo">🏘️ Little Town</div>
   <div class="nav-menu">
     <button class="nav-btn active" id="navHome" onclick="switchView('home')">🏠 Nhà</button>
@@ -150,6 +150,19 @@
     <div style="position:relative;display:inline-block;">
       <button class="btn btn-ghost btn-sm" onclick="logout()" title="Thoát (thiết bị nhớ tài khoản, lần sau tự vào)" style="padding:6px 12px;font-size:0.78rem;">🚪</button>
     </div>
+  </div>
+</nav>
+
+<nav class="top-nav" id="teacherModeNav" style="display:none; background: linear-gradient(135deg, var(--warm), #E65C00); border-bottom: 2px solid var(--warm-light); color: white;">
+  <div class="nav-logo" style="color: white; font-weight: 800; display:flex; align-items:center; gap:8px;">
+    <span>🛠️ Chế độ Giáo viên</span>
+    <span id="teacherModeClassLabel" style="font-size:0.75rem; background:rgba(0,0,0,0.3); padding:2px 8px; border-radius:20px; font-weight:normal;">Lớp: -</span>
+  </div>
+  <div style="font-weight:700; font-size:0.9rem;" id="teacherModeName">Đang xem con phố</div>
+  <div>
+    <button class="btn btn-ghost btn-sm" onclick="exitTeacherMode()" style="color:white; border-color:white; font-weight:bold; background:rgba(255,255,255,0.1); padding:8px 16px;">
+      🚪 Quay lại Bảng điều khiển
+    </button>
   </div>
 </nav>
 
@@ -617,11 +630,35 @@
 AUTH.initDefaultData();
 let currentStudent = AUTH.getCurrentStudent();
 
+// ---- TEACHER MODE STATE ----
+let isTeacherMode = false;
+let teacherClassId = null;
+let teacherInfo = null;
+
 // ---- Boot: load từ server rồi init (có guard tránh double-init) ----
 let _studentInited = false;
 async function _startStudent() {
   if (_studentInited) return;
   _studentInited = true;
+
+  // Check teacher mode query params first
+  const urlParams = new URLSearchParams(window.location.search);
+  const teacherModeParam = urlParams.get('teacherMode') === 'true';
+  const classIdParam = urlParams.get('classId');
+  
+  if (teacherModeParam && classIdParam) {
+    const teacherStored = Object.getPrototypeOf(localStorage).getItem.call(localStorage, 'lt_current_teacher');
+    if (teacherStored) {
+      isTeacherMode = true;
+      teacherClassId = classIdParam;
+      teacherInfo = JSON.parse(teacherStored);
+    }
+  }
+
+  if (isTeacherMode) {
+    initTeacherMode();
+    return;
+  }
 
   // Thử lấy session hiện tại
   currentStudent = AUTH.getCurrentStudent();
@@ -645,6 +682,34 @@ async function _startStudent() {
   init();
 }
 SYNC.load().then(_startStudent);
+
+function initTeacherMode() {
+  if (window.AudioSynth) {
+    AudioSynth.init();
+  }
+  
+  // Hide normal student nav and show teacher mode nav
+  document.getElementById('studentNav').style.display = 'none';
+  const teacherNav = document.getElementById('teacherModeNav');
+  teacherNav.style.display = 'flex';
+  
+  // Set class label and name
+  const cls = DB.getClasses().find(c => c.id === teacherClassId);
+  document.getElementById('teacherModeClassLabel').textContent = 'Lớp: ' + (cls?.name || '');
+  document.getElementById('teacherModeName').textContent = 'Đang xem với tư cách: GV ' + (teacherInfo?.name || '');
+  
+  applyTheme();
+  
+  // Switch to street view directly
+  switchView('street');
+  
+  // Start polling
+  startPolling();
+}
+
+function exitTeacherMode() {
+  window.location.href = `teacher.html?page=classes`;
+}
 
 // ---- SETUP STATE ----
 let setupState = { gender: null, style: null, pet: null, petName: null, currentStep: 0 };
@@ -702,8 +767,15 @@ function startPolling() {
     const dataChanged = await SYNC.load();
     if (dataChanged) {
       console.log('Dữ liệu mạng nội bộ đã được đồng bộ!');
-      currentStudent = AUTH.getCurrentStudent();
       applyTheme();
+      if (isTeacherMode) {
+        renderStreet();
+        if (document.getElementById('communalHouseModal') && document.getElementById('communalHouseModal').classList.contains('active')) {
+          renderCommunalMessages();
+        }
+        return;
+      }
+      currentStudent = AUTH.getCurrentStudent();
       if (currentStudent) {
         updateNavInfo();
         if (currentStudent.setupDone) {
@@ -740,10 +812,13 @@ function updateNavInfo() {
 
 // ---- VIEW SWITCHING ----
 function switchView(viewName) {
+  if (isTeacherMode && viewName !== 'street') return;
+
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('view' + viewName.charAt(0).toUpperCase() + viewName.slice(1)).classList.add('active');
-  document.getElementById('nav' + viewName.charAt(0).toUpperCase() + viewName.slice(1)).classList.add('active');
+  const navBtn = document.getElementById('nav' + viewName.charAt(0).toUpperCase() + viewName.slice(1));
+  if (navBtn) navBtn.classList.add('active');
 
   if (viewName === 'home') renderHome();
   if (viewName === 'street') renderStreet();
@@ -1418,6 +1493,36 @@ function useInventoryItem(itemId) {
 // STREET VIEW
 // ============================================
 function renderStreet() {
+  if (isTeacherMode) {
+    const cls = DB.getClasses().find(c => c.id === teacherClassId);
+    document.getElementById('streetClassName').textContent = '🏘️ ' + (cls?.name || 'Con Phố');
+
+    const students = DB.getStudents().filter(s => s.classId === teacherClassId);
+    const row = document.getElementById('housesRow');
+
+    let html = `
+      <div class="house-wrapper" onclick="openCommunalHouseModal()" style="transform: scale(1.05); filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));">
+        ${UI.renderCommunalHouse(105)}
+        <div class="house-name-tag" style="border-color:var(--accent);color:var(--accent);font-weight:900;">🏛️ Nhà Chung</div>
+        <div class="house-pts-tag" style="background:var(--accent);color:#000;font-weight:bold;">Bản tin lớp</div>
+      </div>
+    `;
+
+    html += students.map(s => `
+      <div class="house-wrapper" onclick="visitHouse('${s.id}')">
+        ${UI.renderHouseFront(s, 90)}
+        <div class="house-name-tag">${escapeHTML(s.name)}</div>
+        <div class="house-pts-tag">⭐${s.points || 0}</div>
+      </div>
+    `).join('');
+
+    row.innerHTML = html;
+
+    const walkEl = document.getElementById('streetWalkChar');
+    walkEl.innerHTML = UI.renderCharacter('girl', 'gen_skin_medium', {}, 70, true);
+    return;
+  }
+
   currentStudent = AUTH.getCurrentStudent();
   const cls = DB.getClasses().find(c => c.id === currentStudent.classId);
   document.getElementById('streetClassName').textContent = '🏘️ ' + (cls?.name || 'Con Phố');
@@ -1434,7 +1539,7 @@ function renderStreet() {
   `;
 
   html += students.map(s => `
-    <div class="house-wrapper" onclick="${s.id !== currentStudent.id ? `visitHouse('${s.id}')` : 'showToast("Đây là nhà của bạn! 🏠", "info")'}">
+    <div class="house-wrapper" onclick="${s.id !== currentStudent.id ? `visitHouse('${s.id}')` : 'showToast(\"Đây là nhà của bạn! 🏠\", \"info\")'}">
       ${UI.renderHouseFront(s, 90)}
       <div class="house-name-tag" style="${s.id === currentStudent.id ? 'border-color:var(--accent);color:var(--accent)' : ''}">${s.id === currentStudent.id ? '🏠' : ''} ${escapeHTML(s.name)}</div>
       <div class="house-pts-tag">⭐${s.points || 0}</div>
@@ -2135,14 +2240,14 @@ function finishSetup() {
 // COMMUNAL HOUSE (NHÀ CHUNG)
 // ============================================
 function openCommunalHouseModal() {
-  currentStudent = AUTH.getCurrentStudent();
-  const cls = DB.getClasses().find(c => c.id === currentStudent.classId);
+  const classId = isTeacherMode ? teacherClassId : currentStudent.classId;
+  const cls = DB.getClasses().find(c => c.id === classId);
   document.getElementById('communalClassSubtitle').textContent = 'Con phố ' + (cls?.name || 'lớp học') + ' • Bản tin và thảo luận';
   
   // Render user avatar in input area
   const userAvatarEl = document.getElementById('communalUserAvatar');
   if (userAvatarEl) {
-    userAvatarEl.innerHTML = currentStudent.gender === 'boy' ? '👦' : '👧';
+    userAvatarEl.innerHTML = isTeacherMode ? '👨‍🏫' : (currentStudent.gender === 'boy' ? '👦' : '👧');
   }
   
   // Clean input
@@ -2155,8 +2260,8 @@ function openCommunalHouseModal() {
 }
 
 function renderCommunalMessages() {
-  currentStudent = AUTH.getCurrentStudent();
-  const messages = DB.getMessagesForClass(currentStudent.classId);
+  const classId = isTeacherMode ? teacherClassId : currentStudent.classId;
+  const messages = DB.getMessagesForClass(classId);
   const container = document.getElementById('communalMessagesContainer');
   
   if (messages.length === 0) {
@@ -2175,7 +2280,7 @@ function renderCommunalMessages() {
   let html = '';
   messages.forEach(msg => {
     const isTeacher = msg.authorRole === 'teacher';
-    const isOwnMsg = msg.authorId === currentStudent.id;
+    const isOwnMsg = isTeacherMode ? true : (msg.authorId === currentStudent.id);
     
     // Style differently for teacher posts
     const borderStyle = isTeacher ? 'border: 2.5px solid var(--warm); background: rgba(247,151,30,0.08);' : '';
@@ -2187,9 +2292,9 @@ function renderCommunalMessages() {
     const formattedTime = new Date(msg.timestamp).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
     const escapedContent = escapeHTML(msg.content).replace(/\n/g, '<br>');
     
-    // Render delete button if it's the student's own message
+    // Render delete button if it's the student's own message (or under teacher mode)
     const deleteBtn = isOwnMsg 
-      ? `<button class="btn btn-ghost btn-sm" onclick="deleteOwnMessage('${msg.id}')" style="padding:4px 10px; font-size:0.75rem; border-color:rgba(255,101,132,0.4); color:var(--secondary); height:auto; min-height:unset;">Xóa</button>` 
+      ? `<button class="btn btn-ghost btn-sm" onclick="deleteOwnMessage('${msg.id}')" style="padding:4px 10px; font-size:0.75rem; border-color:rgba(255,101,132,0.4); color:var(--secondary); height:auto; min-height:unset;">${isTeacherMode ? 'Kiểm duyệt / Xóa' : 'Xóa'}</button>` 
       : '';
       
     // Replies HTML
@@ -2203,7 +2308,7 @@ function renderCommunalMessages() {
         <div style="margin-top:12px; padding-left:16px; border-left: 2px solid var(--border-light); display:flex; flex-direction:column; gap:8px;">
           ${replies.map(r => {
             const isRepTeacher = r.authorRole === 'teacher';
-            const isOwnRep = r.authorId === currentStudent.id;
+            const isOwnRep = isTeacherMode ? true : (r.authorId === currentStudent.id);
             const repNameColor = isRepTeacher ? 'color: var(--warm-light); font-weight: 800;' : 'color: var(--primary-light); font-weight: 700;';
             const repBadgeHtml = isRepTeacher 
               ? `<span class="badge badge-warm" style="font-size:0.65rem; padding: 1px 5px; transform: scale(0.9); margin-left: 4px;">GV</span>` 
@@ -2265,7 +2370,7 @@ function renderCommunalMessages() {
         
         <!-- Add Reply Form -->
         <div style="display:flex; gap:8px; margin-top:12px; align-items:center;">
-          <input type="text" class="input" placeholder="Viết bình luận hoặc phản hồi..." id="replyInput_${msg.id}" style="padding: 8px 12px; font-size:0.85rem; flex-grow:1; background:rgba(0,0,0,0.25); border-color:var(--border-light); border-radius:var(--radius-sm);" onkeydown="if(event.key === 'Enter') submitReply('${msg.id}')">
+          <input type="text" class="input" placeholder="${isTeacherMode ? 'Viết phản hồi của giáo viên...' : 'Viết bình luận hoặc phản hồi...'}" id="replyInput_${msg.id}" style="padding: 8px 12px; font-size:0.85rem; flex-grow:1; background:rgba(0,0,0,0.25); border-color:var(--border-light); border-radius:var(--radius-sm);" onkeydown="if(event.key === 'Enter') submitReply('${msg.id}')">
           <button class="btn btn-accent btn-sm" onclick="submitReply('${msg.id}')" style="padding:8px 16px; font-size:0.8rem; border-radius:var(--radius-sm); height:34px; font-weight:bold;">Phản hồi</button>
         </div>
       </div>
@@ -2276,7 +2381,7 @@ function renderCommunalMessages() {
 }
 
 function submitNewMessage() {
-  currentStudent = AUTH.getCurrentStudent();
+  const classId = isTeacherMode ? teacherClassId : currentStudent.classId;
   const input = document.getElementById('communalPostInput');
   const content = input.value.trim();
   
@@ -2285,14 +2390,18 @@ function submitNewMessage() {
     return;
   }
   
-  DB.addMessage(currentStudent.classId, currentStudent.id, currentStudent.name, 'student', content);
+  if (isTeacherMode) {
+    DB.addMessage(classId, teacherInfo.id || 'teacher', teacherInfo.name || 'Giáo Viên', 'teacher', content);
+    showToast('Đã đăng thông báo giáo viên lên Nhà Chung! 🏛️', 'success');
+  } else {
+    DB.addMessage(classId, currentStudent.id, currentStudent.name, 'student', content);
+    showToast('Đã đăng lời nhắn lên Nhà Chung! 🏛️', 'success');
+  }
   input.value = '';
-  showToast('Đã đăng lời nhắn lên Nhà Chung! 🏛️', 'success');
   renderCommunalMessages();
 }
 
 function submitReply(messageId) {
-  currentStudent = AUTH.getCurrentStudent();
   const input = document.getElementById('replyInput_' + messageId);
   const content = input.value.trim();
   
@@ -2301,14 +2410,20 @@ function submitReply(messageId) {
     return;
   }
   
-  DB.addReply(messageId, currentStudent.id, currentStudent.name, 'student', content);
+  if (isTeacherMode) {
+    DB.addReply(messageId, teacherInfo.id || 'teacher', teacherInfo.name || 'Giáo Viên', 'teacher', content);
+    showToast('Đã gửi phản hồi của giáo viên! 💬', 'success');
+  } else {
+    DB.addReply(messageId, currentStudent.id, currentStudent.name, 'student', content);
+    showToast('Đã gửi phản hồi! 💬', 'success');
+  }
   input.value = '';
-  showToast('Đã gửi phản hồi! 💬', 'success');
   renderCommunalMessages();
 }
 
 function deleteOwnMessage(messageId) {
-  if (confirm('Bạn chắc chắn muốn xóa bài đăng này? 🗑️')) {
+  const confirmMsg = isTeacherMode ? 'Kiểm duyệt: Bạn chắc chắn muốn xóa bài đăng này? Lệnh xóa sẽ được đồng bộ. 🗑/' : 'Bạn chắc chắn muốn xóa bài đăng này? 🗑️';
+  if (confirm(confirmMsg)) {
     DB.removeMessage(messageId);
     showToast('Đã xóa bài đăng! 🗑️', 'success');
     renderCommunalMessages();
@@ -2316,7 +2431,8 @@ function deleteOwnMessage(messageId) {
 }
 
 function deleteOwnReply(messageId, replyId) {
-  if (confirm('Bạn chắc chắn muốn xóa phản hồi này? 🗑️')) {
+  const confirmMsg = isTeacherMode ? 'Kiểm duyệt: Bạn chắc chắn muốn xóa phản hồi này? Lệnh xóa sẽ được đồng bộ. 🗑/' : 'Bạn chắc chắn muốn xóa phản hồi này? 🗑️';
+  if (confirm(confirmMsg)) {
     DB.removeReply(messageId, replyId);
     showToast('Đã xóa phản hồi! 🗑️', 'success');
     renderCommunalMessages();

@@ -432,7 +432,11 @@ function _startTeacher() {
   if (_teacherInited) return;
   _teacherInited = true;
   applyTheme();
-  renderDashboard();
+  
+  const urlParams = new URLSearchParams(window.location.search);
+  const startPage = urlParams.get('page') || 'dashboard';
+  showPage(startPage);
+  
   startTeacherPolling();
 }
 SYNC.load().then(_startTeacher);
@@ -570,9 +574,12 @@ function showClassDetail(classId) {
       <div style="font-size:1.1rem;font-weight:800;">${escapeHTML(cls.name)}</div>
       <div style="font-size:0.82rem;color:var(--text-muted);">Tạo lúc: ${new Date(cls.createdAt).toLocaleDateString('vi-VN')}</div>
     </div>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px;flex-wrap:wrap;">
       <div style="font-weight:700;">${students.length} học sinh</div>
-      <button class="btn btn-primary btn-sm" onclick="openAddStudentModal('${classId}')">➕ Thêm học sinh</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-ghost btn-sm" onclick="viewClassStreet('${classId}')" style="border-color:var(--accent);color:var(--accent);padding:8px 12px;font-size:0.8rem;font-weight:bold;">🏘️ Xem con phố</button>
+        <button class="btn btn-primary btn-sm" onclick="openAddStudentModal('${classId}')" style="padding:8px 12px;font-size:0.8rem;">➕ Thêm học sinh</button>
+      </div>
     </div>
     <div style="display:flex;flex-direction:column;gap:8px;">
       ${students.map(s => `
@@ -592,6 +599,10 @@ function showClassDetail(classId) {
   `;
 
   document.querySelectorAll('.class-list-item').forEach(el => el.classList.remove('active'));
+}
+
+function viewClassStreet(classId) {
+  window.location.href = `student.html?teacherMode=true&classId=${classId}`;
 }
 
 // ---- RENDER STUDENTS TABLE ----
